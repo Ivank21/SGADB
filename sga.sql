@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 18-05-2022 a las 02:42:07
+-- Tiempo de generación: 09-06-2022 a las 12:18:54
 -- Versión del servidor: 10.3.16-MariaDB
 -- Versión de PHP: 7.3.7
 
@@ -61,6 +61,14 @@ CREATE TABLE `clientes` (
   `idMoneda` int(11) NOT NULL,
   `limiteCredito` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Volcado de datos para la tabla `clientes`
+--
+
+INSERT INTO `clientes` (`idCliente`, `ruc`, `idTipoCliente`, `idPersona`, `idMoneda`, `limiteCredito`) VALUES
+(1, '131321332', 1, 1, 1, 3000000),
+(2, '98756651-1', 1, 2, 1, 3000000);
 
 -- --------------------------------------------------------
 
@@ -134,6 +142,14 @@ CREATE TABLE `deposito` (
   `nombre` varchar(75) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+--
+-- Volcado de datos para la tabla `deposito`
+--
+
+INSERT INTO `deposito` (`idDeposito`, `idSucursal`, `nombre`) VALUES
+(1, 1, 'Central'),
+(2, 2, 'Central 2');
+
 -- --------------------------------------------------------
 
 --
@@ -143,7 +159,7 @@ CREATE TABLE `deposito` (
 CREATE TABLE `detalleprecio` (
   `idPrecioDetalle` int(11) NOT NULL,
   `idPrecio` int(11) NOT NULL,
-  `idProductoDetalle` int(11) NOT NULL,
+  `codBara` varchar(75) NOT NULL,
   `precio` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -156,9 +172,13 @@ CREATE TABLE `detalleprecio` (
 CREATE TABLE `detalleventa` (
   `idDetalleVenta` int(11) NOT NULL,
   `idVenta` int(11) NOT NULL,
-  `idProductoDetalle` int(11) NOT NULL,
-  `cantidad` int(11) NOT NULL,
-  `precio` int(11) NOT NULL
+  `codBara` varchar(75) NOT NULL,
+  `descripcion` text NOT NULL,
+  `cantidad` double NOT NULL,
+  `precio` double NOT NULL,
+  `descuento` double NOT NULL,
+  `bonificacion` double NOT NULL,
+  `total` double NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
@@ -195,7 +215,8 @@ CREATE TABLE `empleados` (
 INSERT INTO `empleados` (`idEmpleado`, `idPersona`, `puesto`, `salario`, `FechaIngreso`, `FechaSalida`) VALUES
 (1, 1, 'Jefe', 0, '0000-00-00', NULL),
 (2, 2, 'Cajero', 3000000, '2022-05-16', NULL),
-(3, 3, 'Deposito', 3000000, '2022-05-01', NULL);
+(3, 3, 'Deposito', 3000000, '2022-05-01', NULL),
+(4, 4, 'a', 4165165, '0000-00-00', NULL);
 
 -- --------------------------------------------------------
 
@@ -269,7 +290,7 @@ INSERT INTO `monedas` (`idMoneda`, `nombre`) VALUES
 CREATE TABLE `pedidosclientes` (
   `idPedidoCliente` int(11) NOT NULL,
   `descripcion` varchar(50) NOT NULL,
-  `idProductoDetalle` int(11) NOT NULL
+  `codBara` varchar(75) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
@@ -308,8 +329,9 @@ CREATE TABLE `personas` (
 
 INSERT INTO `personas` (`idPersona`, `nombre`, `apellido`, `cedula`, `email`, `telefono`, `direccion`, `idLocalidad`) VALUES
 (1, 'Juan', 'Perez', '123488', 'jperez@gmail.com', '0987654321', 'Avenida San Juan', 1),
-(2, 'Maria', 'Garcia', '987654', 'mgarcia@gmail.com', '0987563256', 'Avenida Gral Santos', 1),
-(3, 'Marcos', 'Gonzales', '256347', 'mgonzales@gmail.com', '0983652369', 'Avenida San Martin', 1);
+(2, 'Maria', 'Garcia', '987654', 'mgarcia@gmail.com', '0987563256', 'Avenida San Marcos', 1),
+(3, 'Marcos', 'Gonzales', '256347', 'mgonzales@gmail.com', '0983652369', 'Avenida San Martin', 1),
+(4, 'Carlos', 'Gomez', '465236', 'carlosgomez@gmail.com', '0987136525', 'Avda San Juan', 1);
 
 -- --------------------------------------------------------
 
@@ -356,12 +378,11 @@ CREATE TABLE `producto` (
 --
 
 CREATE TABLE `productodetalle` (
-  `idProductoDetalle` int(11) NOT NULL,
+  `codBarra` varchar(75) NOT NULL,
   `idProducto` int(11) NOT NULL,
   `imagen` varchar(255) NOT NULL,
   `medida` varchar(50) NOT NULL,
   `peso` varchar(50) NOT NULL,
-  `codBarra` varchar(75) NOT NULL,
   `marca` varchar(50) NOT NULL,
   `stockMinimo` int(11) NOT NULL,
   `stockActual` int(11) NOT NULL,
@@ -376,20 +397,18 @@ CREATE TABLE `productodetalle` (
 
 CREATE TABLE `roles` (
   `idRol` int(11) NOT NULL,
-  `rol` varchar(50) NOT NULL,
-  `supervisor` int(11) NOT NULL,
-  `activo` varchar(2) NOT NULL
+  `rol` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `roles`
 --
 
-INSERT INTO `roles` (`idRol`, `rol`, `supervisor`, `activo`) VALUES
-(1, 'Administrador', 1, 'A'),
-(2, 'Encargado de Deposito', 1, 'A'),
-(3, 'Cajero', 1, 'A'),
-(4, 'Gestor de pedidos', 1, 'A');
+INSERT INTO `roles` (`idRol`, `rol`) VALUES
+(1, 'Administrador'),
+(2, 'Encargado de Deposito'),
+(3, 'Cajero'),
+(4, 'Gestor de pedidos');
 
 -- --------------------------------------------------------
 
@@ -399,8 +418,19 @@ INSERT INTO `roles` (`idRol`, `rol`, `supervisor`, `activo`) VALUES
 
 CREATE TABLE `sucursales` (
   `idSucursal` int(11) NOT NULL,
-  `nombre` varchar(50) NOT NULL
+  `nombre` varchar(50) NOT NULL,
+  `idLocalidad` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Volcado de datos para la tabla `sucursales`
+--
+
+INSERT INTO `sucursales` (`idSucursal`, `nombre`, `idLocalidad`) VALUES
+(1, 'Sucursal 1', 1),
+(2, 'Sucursal 2', 1),
+(4, 'Sucursal 3', 1),
+(5, 'Sucursal 4', 1);
 
 -- --------------------------------------------------------
 
@@ -452,7 +482,8 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id_usuario`, `usuario`, `contrasena`, `activo`, `idRol`, `idEmpleado`) VALUES
-(1, 'Jperez', 'e1dc99ba9abbe6e07f288e', 'A', 1, 1);
+(1, 'Jperez', 'e1dc99ba9abbe6e07f288e', 'A', 1, 1),
+(2, 'MariaGarcia', 'e1dc99ba9abbe6e07f288e', 'A', 4, 2);
 
 -- --------------------------------------------------------
 
@@ -534,16 +565,16 @@ ALTER TABLE `deposito`
 --
 ALTER TABLE `detalleprecio`
   ADD PRIMARY KEY (`idPrecioDetalle`),
-  ADD KEY `idPrecio` (`idPrecio`,`idProductoDetalle`),
-  ADD KEY `idProductoDetalle` (`idProductoDetalle`);
+  ADD KEY `idPrecio` (`idPrecio`,`codBara`),
+  ADD KEY `codBara` (`codBara`);
 
 --
 -- Indices de la tabla `detalleventa`
 --
 ALTER TABLE `detalleventa`
   ADD PRIMARY KEY (`idDetalleVenta`),
-  ADD KEY `idVenta` (`idVenta`,`idProductoDetalle`),
-  ADD KEY `idProductoDetalle` (`idProductoDetalle`);
+  ADD KEY `idVenta` (`idVenta`,`codBara`),
+  ADD KEY `codBara` (`codBara`);
 
 --
 -- Indices de la tabla `devoluciones`
@@ -589,7 +620,7 @@ ALTER TABLE `monedas`
 --
 ALTER TABLE `pedidosclientes`
   ADD PRIMARY KEY (`idPedidoCliente`),
-  ADD KEY `idProductoDetalle` (`idProductoDetalle`);
+  ADD KEY `idProductoDetalle` (`codBara`);
 
 --
 -- Indices de la tabla `permisos`
@@ -630,7 +661,7 @@ ALTER TABLE `producto`
 -- Indices de la tabla `productodetalle`
 --
 ALTER TABLE `productodetalle`
-  ADD PRIMARY KEY (`idProductoDetalle`),
+  ADD PRIMARY KEY (`codBarra`),
   ADD KEY `idProducto` (`idProducto`);
 
 --
@@ -643,7 +674,8 @@ ALTER TABLE `roles`
 -- Indices de la tabla `sucursales`
 --
 ALTER TABLE `sucursales`
-  ADD PRIMARY KEY (`idSucursal`);
+  ADD PRIMARY KEY (`idSucursal`),
+  ADD KEY `idLocalidad` (`idLocalidad`);
 
 --
 -- Indices de la tabla `tipocliente`
@@ -721,14 +753,14 @@ ALTER TABLE `deposito`
 --
 ALTER TABLE `detalleprecio`
   ADD CONSTRAINT `detalleprecio_ibfk_1` FOREIGN KEY (`idPrecio`) REFERENCES `precios` (`idPrecio`),
-  ADD CONSTRAINT `detalleprecio_ibfk_2` FOREIGN KEY (`idProductoDetalle`) REFERENCES `productodetalle` (`idProductoDetalle`);
+  ADD CONSTRAINT `detalleprecio_ibfk_2` FOREIGN KEY (`codBara`) REFERENCES `productodetalle` (`codBarra`);
 
 --
 -- Filtros para la tabla `detalleventa`
 --
 ALTER TABLE `detalleventa`
   ADD CONSTRAINT `detalleventa_ibfk_1` FOREIGN KEY (`idVenta`) REFERENCES `ventas` (`idVenta`),
-  ADD CONSTRAINT `detalleventa_ibfk_2` FOREIGN KEY (`idProductoDetalle`) REFERENCES `productodetalle` (`idProductoDetalle`);
+  ADD CONSTRAINT `detalleventa_ibfk_2` FOREIGN KEY (`codBara`) REFERENCES `productodetalle` (`codBarra`);
 
 --
 -- Filtros para la tabla `devoluciones`
@@ -752,7 +784,7 @@ ALTER TABLE `localidad`
 -- Filtros para la tabla `pedidosclientes`
 --
 ALTER TABLE `pedidosclientes`
-  ADD CONSTRAINT `pedidosclientes_ibfk_1` FOREIGN KEY (`idProductoDetalle`) REFERENCES `productodetalle` (`idProductoDetalle`);
+  ADD CONSTRAINT `pedidosclientes_ibfk_1` FOREIGN KEY (`codBara`) REFERENCES `productodetalle` (`codBarra`);
 
 --
 -- Filtros para la tabla `permisos`
@@ -768,6 +800,12 @@ ALTER TABLE `personas`
   ADD CONSTRAINT `personas_ibfk_1` FOREIGN KEY (`idLocalidad`) REFERENCES `localidad` (`idLocalidad`);
 
 --
+-- Filtros para la tabla `precios`
+--
+ALTER TABLE `precios`
+  ADD CONSTRAINT `precios_ibfk_1` FOREIGN KEY (`idMoneda`) REFERENCES `monedas` (`idMoneda`);
+
+--
 -- Filtros para la tabla `producto`
 --
 ALTER TABLE `producto`
@@ -778,6 +816,12 @@ ALTER TABLE `producto`
 --
 ALTER TABLE `productodetalle`
   ADD CONSTRAINT `productodetalle_ibfk_1` FOREIGN KEY (`idProducto`) REFERENCES `producto` (`idProducto`);
+
+--
+-- Filtros para la tabla `sucursales`
+--
+ALTER TABLE `sucursales`
+  ADD CONSTRAINT `sucursales_ibfk_1` FOREIGN KEY (`idLocalidad`) REFERENCES `localidad` (`idLocalidad`);
 
 --
 -- Filtros para la tabla `usuarios`
