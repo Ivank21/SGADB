@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 09-06-2022 a las 12:18:54
+-- Tiempo de generación: 13-06-2022 a las 01:08:27
 -- Versión del servidor: 10.3.16-MariaDB
 -- Versión de PHP: 7.3.7
 
@@ -46,6 +46,15 @@ CREATE TABLE `categoria` (
   `idCategoria` int(11) NOT NULL,
   `nombre` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Volcado de datos para la tabla `categoria`
+--
+
+INSERT INTO `categoria` (`idCategoria`, `nombre`) VALUES
+(1, 'Martillos y Mazos'),
+(2, 'Griferia'),
+(3, 'Hachas y Picos');
 
 -- --------------------------------------------------------
 
@@ -159,9 +168,18 @@ INSERT INTO `deposito` (`idDeposito`, `idSucursal`, `nombre`) VALUES
 CREATE TABLE `detalleprecio` (
   `idPrecioDetalle` int(11) NOT NULL,
   `idPrecio` int(11) NOT NULL,
-  `codBara` varchar(75) NOT NULL,
+  `codBarra` varchar(75) NOT NULL,
   `precio` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Volcado de datos para la tabla `detalleprecio`
+--
+
+INSERT INTO `detalleprecio` (`idPrecioDetalle`, `idPrecio`, `codBarra`, `precio`) VALUES
+(1, 1, '1322828', 66000),
+(2, 2, '84201202', 50000),
+(3, 3, '96306', 67000);
 
 -- --------------------------------------------------------
 
@@ -170,7 +188,7 @@ CREATE TABLE `detalleprecio` (
 --
 
 CREATE TABLE `detalleventa` (
-  `idDetalleVenta` int(11) NOT NULL,
+  `nroDetalleVenta` int(11) NOT NULL,
   `idVenta` int(11) NOT NULL,
   `codBara` varchar(75) NOT NULL,
   `descripcion` text NOT NULL,
@@ -358,6 +376,15 @@ CREATE TABLE `precios` (
   `aprobado` varchar(2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+--
+-- Volcado de datos para la tabla `precios`
+--
+
+INSERT INTO `precios` (`idPrecio`, `fecha`, `nombre`, `idMoneda`, `aprobado`) VALUES
+(1, '2022-06-01', 'Mazo', 1, 'A'),
+(2, '2022-06-09', 'Canilla', 1, 'A'),
+(3, '2022-06-03', 'Hacha', 1, 'A');
+
 -- --------------------------------------------------------
 
 --
@@ -366,10 +393,19 @@ CREATE TABLE `precios` (
 
 CREATE TABLE `producto` (
   `idProducto` int(11) NOT NULL,
-  `nombre` varchar(50) NOT NULL,
-  `descripcion` varchar(50) NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `descripcion` varchar(255) NOT NULL,
   `idCategoria` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Volcado de datos para la tabla `producto`
+--
+
+INSERT INTO `producto` (`idProducto`, `nombre`, `descripcion`, `idCategoria`) VALUES
+(1, 'MAZO FRANCES CON CABO EL ROBLE 8KGS', 'Mazo Frances Con Cabo El Roble 8kgs', 1),
+(2, 'CANILLA MONOCOMANDO FLEXIBLE PICO DE GOMA BLANCO PREGO PREG9012', 'Manija metálica. Cierre cerámico cartucho de 40. Aireador plástico. Acabado: Cromo y goma.', 2),
+(3, 'HACHA TUMBA 4 1/2 LIBRAS CON CABO GHERARDI', 'Hacha tumba 4 1/2 libras con cabo Gherardi', 3);
 
 -- --------------------------------------------------------
 
@@ -378,16 +414,26 @@ CREATE TABLE `producto` (
 --
 
 CREATE TABLE `productodetalle` (
+  `idProductoDetalle` int(11) NOT NULL,
   `codBarra` varchar(75) NOT NULL,
   `idProducto` int(11) NOT NULL,
-  `imagen` varchar(255) NOT NULL,
-  `medida` varchar(50) NOT NULL,
-  `peso` varchar(50) NOT NULL,
-  `marca` varchar(50) NOT NULL,
+  `imagen` varchar(255) DEFAULT NULL,
+  `medida` varchar(50) DEFAULT NULL,
+  `peso` varchar(50) DEFAULT NULL,
+  `marca` varchar(50) DEFAULT NULL,
   `stockMinimo` int(11) NOT NULL,
   `stockActual` int(11) NOT NULL,
   `ultimaCompra` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Volcado de datos para la tabla `productodetalle`
+--
+
+INSERT INTO `productodetalle` (`idProductoDetalle`, `codBarra`, `idProducto`, `imagen`, `medida`, `peso`, `marca`, `stockMinimo`, `stockActual`, `ultimaCompra`) VALUES
+(1, '1322828', 1, NULL, NULL, '8Kg', 'El Roble', 3, 5, '2022-06-09'),
+(2, '84201202', 2, NULL, NULL, NULL, 'PREGO', 4, 6, '2022-06-09'),
+(3, '96306', 3, NULL, NULL, '4 kg', 'Tumba', 2, 6, '2022-06-01');
 
 -- --------------------------------------------------------
 
@@ -565,14 +611,13 @@ ALTER TABLE `deposito`
 --
 ALTER TABLE `detalleprecio`
   ADD PRIMARY KEY (`idPrecioDetalle`),
-  ADD KEY `idPrecio` (`idPrecio`,`codBara`),
-  ADD KEY `codBara` (`codBara`);
+  ADD KEY `idPrecio` (`idPrecio`,`codBarra`),
+  ADD KEY `codBarra` (`codBarra`);
 
 --
 -- Indices de la tabla `detalleventa`
 --
 ALTER TABLE `detalleventa`
-  ADD PRIMARY KEY (`idDetalleVenta`),
   ADD KEY `idVenta` (`idVenta`,`codBara`),
   ADD KEY `codBara` (`codBara`);
 
@@ -661,7 +706,7 @@ ALTER TABLE `producto`
 -- Indices de la tabla `productodetalle`
 --
 ALTER TABLE `productodetalle`
-  ADD PRIMARY KEY (`codBarra`),
+  ADD PRIMARY KEY (`codBarra`) USING BTREE,
   ADD KEY `idProducto` (`idProducto`);
 
 --
@@ -753,7 +798,7 @@ ALTER TABLE `deposito`
 --
 ALTER TABLE `detalleprecio`
   ADD CONSTRAINT `detalleprecio_ibfk_1` FOREIGN KEY (`idPrecio`) REFERENCES `precios` (`idPrecio`),
-  ADD CONSTRAINT `detalleprecio_ibfk_2` FOREIGN KEY (`codBara`) REFERENCES `productodetalle` (`codBarra`);
+  ADD CONSTRAINT `detalleprecio_ibfk_2` FOREIGN KEY (`codBarra`) REFERENCES `productodetalle` (`codBarra`);
 
 --
 -- Filtros para la tabla `detalleventa`
