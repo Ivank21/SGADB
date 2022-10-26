@@ -43,17 +43,18 @@ CREATE TABLE `auditoria` (
 
 CREATE TABLE `categoria` (
   `idCategoria` int(11) NOT NULL,
-  `nombre` varchar(50) NOT NULL
+  `categoria` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `categoria`
 --
 
-INSERT INTO `categoria` (`idCategoria`, `nombre`) VALUES
-(1, 'Martillos y Mazos'),
-(2, 'Griferia'),
-(3, 'Hachas y Picos');
+INSERT INTO `categoria` (`idCategoria`, `categoria`) VALUES
+(1, 'Plomeria'),
+(2, 'Electricidades'),
+(3, 'Ferreteria'),
+(4, 'Bulones');
 
 -- --------------------------------------------------------
 
@@ -76,6 +77,29 @@ CREATE TABLE `clientes` (
 
 INSERT INTO `clientes` (`idCliente`, `ruc`, `idTipoCliente`, `idPersona`, `idMoneda`, `limiteCredito`) VALUES
 (1, '123456-9', 1, 1, 1, 3000000);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `colores`
+--
+
+CREATE TABLE `colores` (
+  `idColor` int(11) NOT NULL,
+  `color` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `colores`
+--
+
+INSERT INTO `colores` (`idColor`, `color`) VALUES
+(1, 'ROJO'),
+(2, 'AZUL'),
+(4, 'Violeta'),
+(5, 'Verde'),
+(7, 'Amarillo'),
+(8, 'Celeste');
 
 -- --------------------------------------------------------
 
@@ -169,15 +193,6 @@ CREATE TABLE `detalleprecio` (
   `precio` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
---
--- Volcado de datos para la tabla `detalleprecio`
---
-
-INSERT INTO `detalleprecio` (`idPrecioDetalle`, `idPrecio`, `codBarra`, `precio`) VALUES
-(1, 1, '1322828', 66000),
-(2, 2, '84201202', 50000),
-(3, 3, '96306', 67000);
-
 -- --------------------------------------------------------
 
 --
@@ -209,6 +224,26 @@ CREATE TABLE `devoluciones` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `diseño`
+--
+
+CREATE TABLE `diseño` (
+  `idDiseño` int(11) NOT NULL,
+  `Diseño` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `diseño`
+--
+
+INSERT INTO `diseño` (`idDiseño`, `Diseño`) VALUES
+(1, 'pequeño'),
+(2, 'grande');
+
+-- --------------------------------------------------------
+
 
 --
 -- Estructura de tabla para la tabla `empleados`
@@ -568,6 +603,25 @@ INSERT INTO `localidades` (`idLocalidad`, `localidad`, `idDepartamento`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `marca`
+--
+
+CREATE TABLE `marca` (
+  `idMarca` int(11) NOT NULL,
+  `marca` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `marca`
+--
+
+INSERT INTO `marca` (`idMarca`, `marca`) VALUES
+(1, 'Bellota'),
+(2, 'Tramontina');
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `menus`
 --
 
@@ -659,15 +713,6 @@ CREATE TABLE `precios` (
   `aprobado` varchar(2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
---
--- Volcado de datos para la tabla `precios`
---
-
-INSERT INTO `precios` (`idPrecio`, `fecha`, `nombre`, `idMoneda`, `aprobado`) VALUES
-(1, '2022-06-01', 'Mazo', 1, 'A'),
-(2, '2022-06-09', 'Canilla', 1, 'A'),
-(3, '2022-06-03', 'Hacha', 1, 'A');
-
 -- --------------------------------------------------------
 
 --
@@ -676,19 +721,20 @@ INSERT INTO `precios` (`idPrecio`, `fecha`, `nombre`, `idMoneda`, `aprobado`) VA
 
 CREATE TABLE `producto` (
   `idProducto` int(11) NOT NULL,
-  `nombre` varchar(100) NOT NULL,
-  `descripcion` varchar(255) NOT NULL,
-  `idCategoria` int(11) NOT NULL
+  `nombre` varchar(50) NOT NULL,
+  `idCategoria` int(11) NOT NULL,
+  `StockMinimo` int(11) NOT NULL,
+  `Impuesto` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `producto`
 --
 
-INSERT INTO `producto` (`idProducto`, `nombre`, `descripcion`, `idCategoria`) VALUES
-(1, 'MAZO FRANCES CON CABO EL ROBLE 8KGS', 'Mazo Frances Con Cabo El Roble 8kgs', 1),
-(2, 'CANILLA MONOCOMANDO FLEXIBLE PICO DE GOMA BLANCO PREGO PREG9012', 'Manija metálica. Cierre cerámico cartucho de 40. Aireador plástico. Acabado: Cromo y goma.', 2),
-(3, 'HACHA TUMBA 4 1/2 LIBRAS CON CABO GHERARDI', 'Hacha tumba 4 1/2 libras con cabo Gherardi', 3);
+INSERT INTO `producto` (`idProducto`, `nombre`, `idCategoria`, `StockMinimo`, `Impuesto`) VALUES
+(1, 'Cable ', 1, 10, 11),
+(2, 'Caño ', 1, 20, 11),
+(3, 'Pasa Cable', 2, 8, 11);
 
 -- --------------------------------------------------------
 
@@ -709,15 +755,6 @@ CREATE TABLE `productodetalle` (
   `ultimaCompra` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
---
--- Volcado de datos para la tabla `productodetalle`
---
-
-INSERT INTO `productodetalle` (`idProductoDetalle`, `codBarra`, `idProducto`, `imagen`, `medida`, `peso`, `marca`, `stockMinimo`, `stockActual`, `ultimaCompra`) VALUES
-(1, '1322828', 1, NULL, NULL, '8Kg', 'El Roble', 3, 1, '2022-06-09'),
-(2, '84201202', 2, NULL, NULL, NULL, 'PREGO', 4, 6, '2022-06-09'),
-(3, '96306', 3, NULL, NULL, '4 kg', 'Tumba', 2, 6, '2022-06-01');
-
 -- --------------------------------------------------------
 
 --
@@ -726,19 +763,20 @@ INSERT INTO `productodetalle` (`idProductoDetalle`, `codBarra`, `idProducto`, `i
 
 CREATE TABLE `roles` (
   `idRol` int(11) NOT NULL,
-  `rol` varchar(50) NOT NULL
+  `rol` varchar(50) NOT NULL,
+  `supervisor` int(11) NOT NULL,
+  `activo` varchar(2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `roles`
 --
 
-INSERT INTO `roles` (`idRol`, `rol`) VALUES
-(1, 'Administrador'),
-(2, 'Encargado de Deposito'),
-(3, 'Cajero'),
-(4, 'Gestor de pedidos'),
-(5, 'Prueba');
+INSERT INTO `roles` (`idRol`, `rol`, `supervisor`, `activo`) VALUES
+(1, 'Administrador', 1, 'A'),
+(2, 'Encargado de Deposito', 1, 'A'),
+(3, 'Cajero', 1, 'A'),
+(4, 'Gestor de pedidos', 1, 'A');
 
 -- --------------------------------------------------------
 
@@ -760,6 +798,25 @@ INSERT INTO `sucursales` (`idSucursal`, `nombre`, `idLocalidad`) VALUES
 (1, 'Sucursal Central', 64),
 (2, 'Sucursal 1', 59),
 (3, 'Sucursal 3', 99);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `tamaño`
+--
+
+CREATE TABLE `tamaño` (
+  `idTamaño` int(11) NOT NULL,
+  `tamaño` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `tamaño`
+--
+
+INSERT INTO `tamaño` (`idTamaño`, `tamaño`) VALUES
+(1, 'grande'),
+(2, 'CHICO');
 
 -- --------------------------------------------------------
 
@@ -862,6 +919,12 @@ ALTER TABLE `clientes`
   ADD KEY `idTipoCliente` (`idTipoCliente`);
 
 --
+-- Indices de la tabla `colores`
+--
+ALTER TABLE `colores`
+  ADD PRIMARY KEY (`idColor`);
+
+--
 -- Indices de la tabla `cotizaciones`
 --
 ALTER TABLE `cotizaciones`
@@ -912,6 +975,12 @@ ALTER TABLE `devoluciones`
   ADD KEY `idVenta` (`idVenta`);
 
 --
+-- Indices de la tabla `diseño`
+--
+ALTER TABLE `diseño`
+  ADD PRIMARY KEY (`idDiseño`);
+
+--
 -- Indices de la tabla `empleados`
 --
 ALTER TABLE `empleados`
@@ -943,6 +1012,12 @@ ALTER TABLE `formapagos`
 ALTER TABLE `localidades`
   ADD PRIMARY KEY (`idLocalidad`),
   ADD KEY `idDepartamento` (`idDepartamento`);
+
+--
+-- Indices de la tabla `marca`
+--
+ALTER TABLE `marca`
+  ADD PRIMARY KEY (`idMarca`);
 
 --
 -- Indices de la tabla `menus`
@@ -1010,6 +1085,12 @@ ALTER TABLE `roles`
 ALTER TABLE `sucursales`
   ADD PRIMARY KEY (`idSucursal`),
   ADD KEY `idLocalidad` (`idLocalidad`);
+
+--
+-- Indices de la tabla `tamaño`
+--
+ALTER TABLE `tamaño`
+  ADD PRIMARY KEY (`idTamaño`);
 
 --
 -- Indices de la tabla `tipocliente`
