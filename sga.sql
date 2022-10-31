@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 26-10-2022 a las 00:55:58
+-- Tiempo de generación: 31-10-2022 a las 23:39:22
 -- Versión del servidor: 10.4.22-MariaDB
 -- Versión de PHP: 7.4.27
 
@@ -94,7 +94,7 @@ CREATE TABLE `colores` (
 --
 
 INSERT INTO `colores` (`idColor`, `color`) VALUES
-(1, 'ROJO'),
+(1, 'Rojo'),
 (2, 'AZUL'),
 (4, 'Violeta'),
 (5, 'Verde'),
@@ -231,19 +231,18 @@ CREATE TABLE `devoluciones` (
 
 CREATE TABLE `diseño` (
   `idDiseño` int(11) NOT NULL,
-  `Diseño` varchar(50) NOT NULL
+  `diseño` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `diseño`
 --
 
-INSERT INTO `diseño` (`idDiseño`, `Diseño`) VALUES
+INSERT INTO `diseño` (`idDiseño`, `diseño`) VALUES
 (1, 'pequeño'),
 (2, 'grande');
 
 -- --------------------------------------------------------
-
 
 --
 -- Estructura de tabla para la tabla `empleados`
@@ -638,16 +637,17 @@ CREATE TABLE `menus` (
 
 CREATE TABLE `monedas` (
   `idMoneda` int(11) NOT NULL,
-  `nombre` varchar(45) NOT NULL
+  `nombre` varchar(45) NOT NULL,
+  `simbolo` varchar(5) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `monedas`
 --
 
-INSERT INTO `monedas` (`idMoneda`, `nombre`) VALUES
-(1, 'Guarani'),
-(2, 'Dólar');
+INSERT INTO `monedas` (`idMoneda`, `nombre`, `simbolo`) VALUES
+(1, 'Guarani', 'Gs.'),
+(2, 'Dólar', '$');
 
 -- --------------------------------------------------------
 
@@ -696,8 +696,15 @@ INSERT INTO `personas` (`idPersona`, `nombre`, `apellido`, `cedula`, `email`, `t
 
 CREATE TABLE `plazos` (
   `idPlazo` int(11) NOT NULL,
-  `descripcion` varchar(255) NOT NULL
+  `plazo` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Volcado de datos para la tabla `plazos`
+--
+
+INSERT INTO `plazos` (`idPlazo`, `plazo`) VALUES
+(1, '1 Mes');
 
 -- --------------------------------------------------------
 
@@ -732,7 +739,7 @@ CREATE TABLE `producto` (
 --
 
 INSERT INTO `producto` (`idProducto`, `nombre`, `idCategoria`, `StockMinimo`, `Impuesto`) VALUES
-(1, 'Cable ', 1, 10, 11),
+(1, 'Cable ', 2, 10, 11),
 (2, 'Caño ', 1, 20, 11),
 (3, 'Pasa Cable', 2, 8, 11);
 
@@ -763,20 +770,18 @@ CREATE TABLE `productodetalle` (
 
 CREATE TABLE `roles` (
   `idRol` int(11) NOT NULL,
-  `rol` varchar(50) NOT NULL,
-  `supervisor` int(11) NOT NULL,
-  `activo` varchar(2) NOT NULL
+  `rol` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `roles`
 --
 
-INSERT INTO `roles` (`idRol`, `rol`, `supervisor`, `activo`) VALUES
-(1, 'Administrador', 1, 'A'),
-(2, 'Encargado de Deposito', 1, 'A'),
-(3, 'Cajero', 1, 'A'),
-(4, 'Gestor de pedidos', 1, 'A');
+INSERT INTO `roles` (`idRol`, `rol`) VALUES
+(1, 'Administrador'),
+(2, 'Encargado de Deposito'),
+(3, 'Cajero'),
+(4, 'Gestor de pedidos');
 
 -- --------------------------------------------------------
 
@@ -840,13 +845,20 @@ INSERT INTO `tipocliente` (`idTipoCliente`, `tipo`) VALUES
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `tipodoc`
+-- Estructura de tabla para la tabla `tipocomprobante`
 --
 
-CREATE TABLE `tipodoc` (
-  `idTipoDoc` int(11) NOT NULL,
-  `nombre` varchar(50) NOT NULL
+CREATE TABLE `tipocomprobante` (
+  `idTipoComprobante` int(11) NOT NULL,
+  `comprobante` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Volcado de datos para la tabla `tipocomprobante`
+--
+
+INSERT INTO `tipocomprobante` (`idTipoComprobante`, `comprobante`) VALUES
+(1, 'Factura');
 
 -- --------------------------------------------------------
 
@@ -881,11 +893,13 @@ CREATE TABLE `ventas` (
   `idVenta` int(11) NOT NULL,
   `numeroFactura` varchar(50) NOT NULL,
   `fechaProceso` date NOT NULL,
+  `condicion` varchar(75) NOT NULL,
+  `idFormaPago` int(11) NOT NULL,
   `idCliente` int(11) NOT NULL,
   `montoTotal` int(11) NOT NULL,
   `idMoneda` int(11) NOT NULL,
   `idPlazo` int(11) DEFAULT NULL,
-  `idTipoDoc` int(11) DEFAULT NULL,
+  `idTipoComprobante` int(11) DEFAULT NULL,
   `idDeposito` int(11) NOT NULL,
   `idUsuario` int(11) NOT NULL,
   `pagoInicial` int(11) NOT NULL,
@@ -1099,10 +1113,10 @@ ALTER TABLE `tipocliente`
   ADD PRIMARY KEY (`idTipoCliente`);
 
 --
--- Indices de la tabla `tipodoc`
+-- Indices de la tabla `tipocomprobante`
 --
-ALTER TABLE `tipodoc`
-  ADD PRIMARY KEY (`idTipoDoc`);
+ALTER TABLE `tipocomprobante`
+  ADD PRIMARY KEY (`idTipoComprobante`);
 
 --
 -- Indices de la tabla `usuarios`
@@ -1119,7 +1133,7 @@ ALTER TABLE `ventas`
   ADD PRIMARY KEY (`idVenta`),
   ADD KEY `idMoneda` (`idMoneda`),
   ADD KEY `idDeposito` (`idDeposito`),
-  ADD KEY `idTipoDoc` (`idTipoDoc`),
+  ADD KEY `idTipoDoc` (`idTipoComprobante`),
   ADD KEY `idPlazo` (`idPlazo`),
   ADD KEY `idUsuario` (`idUsuario`),
   ADD KEY `numeroFactura` (`numeroFactura`),
@@ -1251,7 +1265,7 @@ ALTER TABLE `ventas`
   ADD CONSTRAINT `ventas_ibfk_1` FOREIGN KEY (`idMoneda`) REFERENCES `monedas` (`idMoneda`),
   ADD CONSTRAINT `ventas_ibfk_10` FOREIGN KEY (`idCliente`) REFERENCES `clientes` (`idCliente`) ON DELETE NO ACTION,
   ADD CONSTRAINT `ventas_ibfk_3` FOREIGN KEY (`idDeposito`) REFERENCES `deposito` (`idDeposito`),
-  ADD CONSTRAINT `ventas_ibfk_5` FOREIGN KEY (`idTipoDoc`) REFERENCES `tipodoc` (`idTipoDoc`),
+  ADD CONSTRAINT `ventas_ibfk_5` FOREIGN KEY (`idTipoComprobante`) REFERENCES `tipocomprobante` (`idTipoComprobante`),
   ADD CONSTRAINT `ventas_ibfk_6` FOREIGN KEY (`idPlazo`) REFERENCES `plazos` (`idPlazo`),
   ADD CONSTRAINT `ventas_ibfk_7` FOREIGN KEY (`idUsuario`) REFERENCES `usuarios` (`id_usuario`),
   ADD CONSTRAINT `ventas_ibfk_9` FOREIGN KEY (`idPrecio`) REFERENCES `precios` (`idPrecio`);
