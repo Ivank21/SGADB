@@ -778,7 +778,14 @@ CREATE TABLE `marca` (
 
 INSERT INTO `marca` (`idMarca`, `marca`) VALUES
 (1, 'Bellota'),
-(2, 'Tramontina');
+(2, 'Tramontina'),
+(3, 'Amanecer'),
+(4, 'Pintu Par'),
+(5, 'Sika'),
+(6, 'Elektron'),
+(7, 'Ciser'),
+(8, 'Profield'),
+(9, 'Sin Marca');
 
 -- --------------------------------------------------------
 
@@ -928,7 +935,7 @@ CREATE TABLE `producto` (
   `idProducto` int(11) NOT NULL,
   `nombre` varchar(50) NOT NULL,
   `idCategoria` int(11) NOT NULL,
-  `StockMinimo` int(11) NOT NULL,
+  `IdMarca` int(11) NOT NULL,
   `Impuesto` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -936,10 +943,9 @@ CREATE TABLE `producto` (
 -- Volcado de datos para la tabla `producto`
 --
 
-INSERT INTO `producto` (`idProducto`, `nombre`, `idCategoria`, `StockMinimo`, `Impuesto`) VALUES
-(1, 'Cable ', 2, 10, 10),
-(2, 'Caño ', 1, 20, 0),
-(3, 'Pasa Cable', 2, 8, 0);
+INSERT INTO `producto` (`idProducto`, `nombre`, `idCategoria`, `IdMarca`, `Impuesto`) VALUES
+(12, 'placa 2', 3, 6, 10),
+(16, 'cable canal 14x27', 3, 6, 10);
 
 -- --------------------------------------------------------
 
@@ -951,24 +957,21 @@ CREATE TABLE `productodetalle` (
   `idProductoDetalle` int(11) NOT NULL,
   `codBarra` varchar(75) NOT NULL,
   `idProducto` int(11) NOT NULL,
-  `imagen` varchar(255) DEFAULT NULL,
-  `idColor` int(11) NOT NULL,
-  `idDiseño` int(11) NOT NULL,
-  `idMarca` int(11) NOT NULL,
-  `idTamaño` int(11) NOT NULL,
+  `idTamaño` int(11) DEFAULT NULL,
+  `idColor` int(11) DEFAULT NULL,
+  `idDiseño` int(11) DEFAULT NULL,
   `stockMinimo` int(11) NOT NULL,
-  `stockActual` int(11) NOT NULL,
-  `ultimaCompra` date NOT NULL
+  `stockActual` int(11) DEFAULT NULL,
+  `ultimaCompra` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Volcado de datos para la tabla `productodetalle`
 --
 
-INSERT INTO `productodetalle` (`idProductoDetalle`, `codBarra`, `idProducto`, `imagen`, `idColor`, `idDiseño`, `idMarca`, `idTamaño`, `stockMinimo`, `stockActual`, `ultimaCompra`) VALUES
-(3, '0112233', 3, NULL, 2, 1, 1, 1, 3, 11, '2022-11-12'),
-(1, '123456', 1, NULL, 5, 1, 2, 1, 3, 40, '2022-10-01'),
-(2, '654321', 2, NULL, 4, 2, 2, 1, 3, 6, '2022-11-12');
+INSERT INTO `productodetalle` (`idProductoDetalle`, `codBarra`, `idProducto`, `idTamaño`, `idColor`, `idDiseño`, `stockMinimo`, `stockActual`, `ultimaCompra`) VALUES
+(1, '1478', 16, 3, 9, 3, 78, NULL, NULL),
+(1, '476', 12, 1, 8, 2, 89, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1058,7 +1061,8 @@ CREATE TABLE `tamaño` (
 
 INSERT INTO `tamaño` (`idTamaño`, `tamaño`) VALUES
 (1, 'grande'),
-(2, 'CHICO');
+(2, 'CHICO'),
+(3, 'Standard');
 
 -- --------------------------------------------------------
 
