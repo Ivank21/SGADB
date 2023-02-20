@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.1.1
+-- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 13-01-2023 a las 12:12:19
--- Versión del servidor: 10.4.22-MariaDB
--- Versión de PHP: 7.4.27
+-- Tiempo de generación: 20-02-2023 a las 10:39:55
+-- Versión del servidor: 10.4.27-MariaDB
+-- Versión de PHP: 8.0.25
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -24,6 +24,18 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `arqueocajas`
+--
+
+CREATE TABLE `arqueocajas` (
+  `id` int(11) NOT NULL,
+  `deduccion` varchar(255) NOT NULL,
+  `idCaja` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `auditoria`
 --
 
@@ -33,7 +45,21 @@ CREATE TABLE `auditoria` (
   `tabla` varchar(50) NOT NULL,
   `proceso` varchar(50) NOT NULL,
   `fecha` date NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `cajas`
+--
+
+CREATE TABLE `cajas` (
+  `id` int(11) NOT NULL,
+  `fecha` bigint(20) NOT NULL,
+  `montoInicio` double NOT NULL,
+  `montoFin` double NOT NULL,
+  `idUsuario` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -44,7 +70,7 @@ CREATE TABLE `auditoria` (
 CREATE TABLE `categoria` (
   `idCategoria` int(11) NOT NULL,
   `categoria` varchar(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `categoria`
@@ -69,7 +95,7 @@ CREATE TABLE `clientes` (
   `idPersona` int(11) NOT NULL,
   `limiteCredito` int(11) NOT NULL,
   `idMoneda` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `clientes`
@@ -92,14 +118,7 @@ CREATE TABLE `cobros` (
   `nroRecibo` int(11) NOT NULL,
   `totalCobro` float(16,2) NOT NULL,
   `impreso` int(11) NOT NULL DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
---
--- Volcado de datos para la tabla `cobros`
---
-
-INSERT INTO `cobros` (`id`, `idCliente`, `fecha`, `nroRecibo`, `totalCobro`, `impreso`) VALUES
-(1, 2, 1673319600, 1, 47000.00, 1);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Disparadores `cobros`
@@ -120,7 +139,7 @@ DELIMITER ;
 CREATE TABLE `colores` (
   `idColor` int(11) NOT NULL,
   `color` varchar(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `colores`
@@ -137,13 +156,43 @@ INSERT INTO `colores` (`idColor`, `color`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `compras`
+--
+
+CREATE TABLE `compras` (
+  `idCompra` int(11) NOT NULL,
+  `fechaProceso` bigint(20) NOT NULL,
+  `fechaLlegada` bigint(20) NOT NULL,
+  `serie` varchar(50) NOT NULL,
+  `timbrado` varchar(50) NOT NULL,
+  `vencimiento` bigint(20) NOT NULL,
+  `nroDocumento` int(11) NOT NULL,
+  `idProveedor` int(11) NOT NULL,
+  `idCondicion` int(11) NOT NULL,
+  `idFormaPago` int(11) NOT NULL,
+  `idDeposito` int(11) NOT NULL,
+  `idPlazo` int(11) NOT NULL,
+  `idMoneda` int(11) NOT NULL,
+  `idUsuario` int(11) NOT NULL,
+  `pagoInicial` double NOT NULL,
+  `totalExento` double NOT NULL,
+  `totalNeto` double NOT NULL,
+  `totalImpuesto` double NOT NULL,
+  `totalBruto` double NOT NULL,
+  `totalFactura` double NOT NULL,
+  `anulado` int(11) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `condiciones`
 --
 
 CREATE TABLE `condiciones` (
   `idCondicion` int(11) NOT NULL,
   `condicion` varchar(75) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `condiciones`
@@ -163,7 +212,7 @@ CREATE TABLE `cotizaciones` (
   `idCotizacion` int(11) NOT NULL,
   `nombre` varchar(45) NOT NULL,
   `idMoneda` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -179,15 +228,23 @@ CREATE TABLE `cuentascobrar` (
   `vence` bigint(20) NOT NULL,
   `tabla_id` int(11) NOT NULL,
   `nombre_tabla` varchar(75) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
 
 --
--- Volcado de datos para la tabla `cuentascobrar`
+-- Estructura de tabla para la tabla `cuentaspagar`
 --
 
-INSERT INTO `cuentascobrar` (`id`, `cuota`, `importe`, `pagado`, `vence`, `tabla_id`, `nombre_tabla`) VALUES
-(1, 1, 23500.00, 23500.00, 1671850800, 1, 'ventas'),
-(1, 2, 23500.00, 23500.00, 1671937200, 1, 'ventas');
+CREATE TABLE `cuentaspagar` (
+  `id` int(11) NOT NULL,
+  `cuota` int(11) NOT NULL,
+  `importe` int(11) NOT NULL,
+  `pagado` float(16,2) NOT NULL,
+  `vence` bigint(20) NOT NULL,
+  `tabla_id` int(11) NOT NULL,
+  `nombre_tabla` varchar(75) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -198,7 +255,7 @@ INSERT INTO `cuentascobrar` (`id`, `cuota`, `importe`, `pagado`, `vence`, `tabla
 CREATE TABLE `departamentos` (
   `idDepartamento` int(11) NOT NULL,
   `departamento` varchar(75) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `departamentos`
@@ -233,7 +290,7 @@ CREATE TABLE `deposito` (
   `idDeposito` int(11) NOT NULL,
   `idSucursal` int(11) NOT NULL,
   `nombre` varchar(75) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `deposito`
@@ -254,15 +311,7 @@ CREATE TABLE `detallecobro` (
   `idCuentaCobrar` int(11) NOT NULL,
   `importe` float(16,2) NOT NULL,
   `cuota` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
---
--- Volcado de datos para la tabla `detallecobro`
---
-
-INSERT INTO `detallecobro` (`idDetalleCobro`, `idCobro`, `idCuentaCobrar`, `importe`, `cuota`) VALUES
-(1, 1, 1, 23500.00, 1),
-(2, 1, 1, 23500.00, 2);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Disparadores `detallecobro`
@@ -283,6 +332,73 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `detallecompra`
+--
+
+CREATE TABLE `detallecompra` (
+  `idDetalleCompra` int(11) NOT NULL,
+  `idCompra` int(11) NOT NULL,
+  `codBarra` varchar(75) NOT NULL,
+  `descripcion` text NOT NULL,
+  `precioBruto` double NOT NULL,
+  `precioNeto` double NOT NULL,
+  `cantidad` double NOT NULL,
+  `descuento` double NOT NULL,
+  `bonificacion` double NOT NULL,
+  `impuesto` double NOT NULL,
+  `total` double NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Disparadores `detallecompra`
+--
+DELIMITER $$
+CREATE TRIGGER `sotck_update_detallecompra_delete` AFTER DELETE ON `detallecompra` FOR EACH ROW BEGIN  
+	DECLARE depositoId INT;
+
+	SELECT idDeposito
+	INTO depositoId
+	FROM compras 
+	WHERE idCompra = OLD.idCompra;
+    
+    UPDATE stock SET 
+    stockActual = stockActual - OLD.cantidad
+    WHERE codBarra = OLD.codBarra AND idDeposito = depositoId;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `stock_insert_detallecompra_insert` AFTER INSERT ON `detallecompra` FOR EACH ROW BEGIN
+	DECLARE depositoId INT;
+	DECLARE cantidad INT;
+	DECLARE fechaCompra BIGINT;
+
+	SELECT idDeposito, fechaProceso
+	INTO depositoId, fechaCompra
+	FROM compras 
+	WHERE idCompra = NEW.idCompra;
+    
+    SELECT COUNT(*)
+    INTO cantidad
+    FROM stock
+    WHERE codBarra = NEW.codBarra;
+
+	IF cantidad = 0 THEN
+		INSERT INTO stock 
+    	VALUES (NEW.codBarra, depositoId, NEW.cantidad, fechaCompra);
+	ELSE
+		UPDATE stock 
+    	SET stockActual = stockActual + NEW.cantidad,
+    	ultimaCompra = fechaCompra
+    	WHERE codBarra = NEW.codBarra AND idDeposito = depositoId;
+    END IF;
+END
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `detalleprecio`
 --
 
@@ -290,17 +406,22 @@ CREATE TABLE `detalleprecio` (
   `idPrecioDetalle` int(11) NOT NULL,
   `idPrecio` int(11) NOT NULL,
   `codBarra` varchar(75) NOT NULL,
-  `precio` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `precio` double NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
 
 --
--- Volcado de datos para la tabla `detalleprecio`
+-- Estructura de tabla para la tabla `detallespagos`
 --
 
-INSERT INTO `detalleprecio` (`idPrecioDetalle`, `idPrecio`, `codBarra`, `precio`) VALUES
-(1, 1, '123456', 12000),
-(2, 1, '654321', 15000),
-(3, 1, '0112233', 10000);
+CREATE TABLE `detallespagos` (
+  `idDetallePago` int(11) NOT NULL,
+  `idPago` int(11) NOT NULL,
+  `idCuentaPagar` int(11) NOT NULL,
+  `importe` float(16,2) NOT NULL,
+  `cuota` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -320,16 +441,7 @@ CREATE TABLE `detalleventa` (
   `bonificacion` double NOT NULL,
   `impuesto` double NOT NULL,
   `total` double NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Volcado de datos para la tabla `detalleventa`
---
-
-INSERT INTO `detalleventa` (`idDetalleVenta`, `idVenta`, `codBarra`, `descripcion`, `precioBruto`, `precioNeto`, `cantidad`, `descuento`, `bonificacion`, `impuesto`, `total`) VALUES
-(1, 1, '123456', 'Cable  - Verde - pequeño - Tramontina - grande', 12000, 10909.09, 1, 0, 0, 1090.9099999999999, 12000),
-(2, 1, '654321', 'Caño  - Violeta - grande - Tramontina - grande', 15000, 0, 1, 0, 0, 0, 15000),
-(3, 1, '0112233', 'Pasa Cable - AZUL - pequeño - Bellota - grande', 10000, 0, 2, 0, 0, 0, 20000);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Disparadores `detalleventa`
@@ -348,25 +460,13 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `devoluciones`
---
-
-CREATE TABLE `devoluciones` (
-  `idDevolucion` int(11) NOT NULL,
-  `idVenta` int(11) NOT NULL,
-  `motivo` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
--- --------------------------------------------------------
-
---
 -- Estructura de tabla para la tabla `diseño`
 --
 
 CREATE TABLE `diseño` (
   `idDiseño` int(11) NOT NULL,
   `diseño` varchar(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `diseño`
@@ -389,7 +489,7 @@ CREATE TABLE `empleados` (
   `salario` int(11) NOT NULL,
   `FechaIngreso` date NOT NULL,
   `FechaSalida` date DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `empleados`
@@ -413,7 +513,7 @@ CREATE TABLE `empresa` (
   `direccion` varchar(255) NOT NULL,
   `idLocalidad` int(11) NOT NULL,
   `ruc` varchar(75) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `empresa`
@@ -435,7 +535,7 @@ CREATE TABLE `facturasanuladas` (
   `nroFactura` varchar(75) NOT NULL,
   `motivo` varchar(255) NOT NULL,
   `fechaOperacion` bigint(20) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Disparadores `facturasanuladas`
@@ -473,7 +573,7 @@ DELIMITER ;
 CREATE TABLE `formapagos` (
   `idFormaPago` int(11) NOT NULL,
   `formaPago` varchar(75) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `formapagos`
@@ -492,7 +592,7 @@ CREATE TABLE `localidades` (
   `idLocalidad` int(11) NOT NULL,
   `localidad` varchar(50) NOT NULL,
   `idDepartamento` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `localidades`
@@ -770,7 +870,7 @@ INSERT INTO `localidades` (`idLocalidad`, `localidad`, `idDepartamento`) VALUES
 CREATE TABLE `marca` (
   `idMarca` int(11) NOT NULL,
   `marca` varchar(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `marca`
@@ -796,7 +896,7 @@ INSERT INTO `marca` (`idMarca`, `marca`) VALUES
 CREATE TABLE `menus` (
   `idMenu` int(11) NOT NULL,
   `menu` varchar(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -809,7 +909,7 @@ CREATE TABLE `monedas` (
   `nombre` varchar(45) NOT NULL,
   `simbolo` varchar(5) NOT NULL,
   `decimales` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `monedas`
@@ -822,6 +922,20 @@ INSERT INTO `monedas` (`idMoneda`, `nombre`, `simbolo`, `decimales`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `pagos`
+--
+
+CREATE TABLE `pagos` (
+  `id` int(11) NOT NULL,
+  `idProveedor` int(11) NOT NULL,
+  `fecha` bigint(20) NOT NULL,
+  `nroRecibo` int(11) NOT NULL,
+  `totalPago` float(16,2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `permisos`
 --
 
@@ -830,7 +944,7 @@ CREATE TABLE `permisos` (
   `permiso` varchar(50) NOT NULL,
   `idRol` int(11) NOT NULL,
   `idMenu` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -847,7 +961,7 @@ CREATE TABLE `personas` (
   `telefono` varchar(20) DEFAULT NULL,
   `direccion` varchar(255) DEFAULT NULL,
   `idLocalidad` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `personas`
@@ -861,6 +975,19 @@ INSERT INTO `personas` (`idPersona`, `nombre`, `apellido`, `cedula`, `email`, `t
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `planilla`
+--
+
+CREATE TABLE `planilla` (
+  `id` int(11) NOT NULL,
+  `idCaja` int(11) NOT NULL,
+  `ingreso` double NOT NULL,
+  `egreso` double NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `plazos`
 --
 
@@ -869,7 +996,7 @@ CREATE TABLE `plazos` (
   `plazo` varchar(255) NOT NULL,
   `cuotas` int(11) NOT NULL,
   `irregular` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `plazos`
@@ -892,7 +1019,7 @@ CREATE TABLE `plazosdetalle` (
   `cuota` int(11) NOT NULL,
   `dias` int(11) NOT NULL,
   `porcentaje` decimal(6,2) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `plazosdetalle`
@@ -912,18 +1039,12 @@ INSERT INTO `plazosdetalle` (`idDetallePlazo`, `idPlazo`, `cuota`, `dias`, `porc
 
 CREATE TABLE `precios` (
   `idPrecio` int(11) NOT NULL,
-  `fecha` date NOT NULL,
+  `fecha` bigint(20) NOT NULL,
   `nombre` varchar(50) NOT NULL,
   `idMoneda` int(11) NOT NULL,
-  `aprobado` varchar(2) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Volcado de datos para la tabla `precios`
---
-
-INSERT INTO `precios` (`idPrecio`, `fecha`, `nombre`, `idMoneda`, `aprobado`) VALUES
-(1, '2022-10-31', 'Prueba', 1, 'S');
+  `aprobado` int(11) NOT NULL,
+  `activo` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -937,15 +1058,14 @@ CREATE TABLE `producto` (
   `idCategoria` int(11) NOT NULL,
   `IdMarca` int(11) NOT NULL,
   `Impuesto` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `producto`
 --
 
 INSERT INTO `producto` (`idProducto`, `nombre`, `idCategoria`, `IdMarca`, `Impuesto`) VALUES
-(12, 'placa 2', 3, 6, 10),
-(16, 'cable canal 14x27', 3, 6, 10);
+(1, 'Caño', 1, 2, 10);
 
 -- --------------------------------------------------------
 
@@ -960,18 +1080,35 @@ CREATE TABLE `productodetalle` (
   `idTamaño` int(11) DEFAULT NULL,
   `idColor` int(11) DEFAULT NULL,
   `idDiseño` int(11) DEFAULT NULL,
-  `stockMinimo` int(11) NOT NULL,
-  `stockActual` int(11) DEFAULT NULL,
-  `ultimaCompra` date DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `stockMinimo` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `productodetalle`
 --
 
-INSERT INTO `productodetalle` (`idProductoDetalle`, `codBarra`, `idProducto`, `idTamaño`, `idColor`, `idDiseño`, `stockMinimo`, `stockActual`, `ultimaCompra`) VALUES
-(1, '1478', 16, 3, 9, 3, 78, NULL, NULL),
-(1, '476', 12, 1, 8, 2, 89, NULL, NULL);
+INSERT INTO `productodetalle` (`idProductoDetalle`, `codBarra`, `idProducto`, `idTamaño`, `idColor`, `idDiseño`, `stockMinimo`) VALUES
+(1, '123456', 1, 1, 1, 1, 10);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `proveedores`
+--
+
+CREATE TABLE `proveedores` (
+  `idProveedor` int(11) NOT NULL,
+  `ruc` varchar(50) NOT NULL,
+  `idPersona` int(11) NOT NULL,
+  `idMoneda` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `proveedores`
+--
+
+INSERT INTO `proveedores` (`idProveedor`, `ruc`, `idPersona`, `idMoneda`) VALUES
+(1, '1234556-7', 3, 1);
 
 -- --------------------------------------------------------
 
@@ -982,7 +1119,7 @@ INSERT INTO `productodetalle` (`idProductoDetalle`, `codBarra`, `idProducto`, `i
 CREATE TABLE `roles` (
   `idRol` int(11) NOT NULL,
   `rol` varchar(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `roles`
@@ -997,6 +1134,26 @@ INSERT INTO `roles` (`idRol`, `rol`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `stock`
+--
+
+CREATE TABLE `stock` (
+  `codBarra` varchar(75) NOT NULL,
+  `idDeposito` int(11) NOT NULL,
+  `stockActual` int(11) NOT NULL,
+  `ultimaCompra` bigint(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `stock`
+--
+
+INSERT INTO `stock` (`codBarra`, `idDeposito`, `stockActual`, `ultimaCompra`) VALUES
+('123456', 1, 0, 1676430000);
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `sucursales`
 --
 
@@ -1004,7 +1161,7 @@ CREATE TABLE `sucursales` (
   `idSucursal` int(11) NOT NULL,
   `nombre` varchar(50) NOT NULL,
   `idLocalidad` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `sucursales`
@@ -1034,15 +1191,15 @@ CREATE TABLE `talonarios` (
   `idUsuario` int(11) NOT NULL,
   `disponible` int(11) NOT NULL DEFAULT 0,
   `utilizado` int(11) NOT NULL DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `talonarios`
 --
 
 INSERT INTO `talonarios` (`idTalonario`, `idTipoComprobante`, `timbrado`, `inicioVigencia`, `finVigencia`, `serie`, `nroInicio`, `nroFin`, `activo`, `idUsuario`, `disponible`, `utilizado`) VALUES
-(1, 1, '123456-7', '2022-11-01', '2022-11-30', '001-001-', 1, 100, 'A', 1, 99, 1),
-(2, 2, NULL, NULL, NULL, NULL, 1, 100, 'A', 1, 100, 0);
+(1, 1, '123456-7', '2022-11-01', '2022-11-30', '001-001-', 1, 100, 'A', 1, 100, 0),
+(2, 2, NULL, NULL, NULL, NULL, 1, 100, 'A', 1, 101, -1);
 
 -- --------------------------------------------------------
 
@@ -1053,7 +1210,7 @@ INSERT INTO `talonarios` (`idTalonario`, `idTipoComprobante`, `timbrado`, `inici
 CREATE TABLE `tamaño` (
   `idTamaño` int(11) NOT NULL,
   `tamaño` varchar(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `tamaño`
@@ -1073,7 +1230,7 @@ INSERT INTO `tamaño` (`idTamaño`, `tamaño`) VALUES
 CREATE TABLE `tipocliente` (
   `idTipoCliente` int(11) NOT NULL,
   `tipo` varchar(75) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `tipocliente`
@@ -1093,7 +1250,7 @@ CREATE TABLE `tipocomprobante` (
   `idTipoComprobante` int(11) NOT NULL,
   `comprobante` varchar(50) NOT NULL,
   `estado` varchar(2) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `tipocomprobante`
@@ -1116,7 +1273,7 @@ CREATE TABLE `usuarios` (
   `activo` varchar(2) NOT NULL,
   `idRol` int(11) NOT NULL,
   `idEmpleado` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `usuarios`
@@ -1158,14 +1315,7 @@ CREATE TABLE `ventas` (
   `vencimientoFactura` bigint(20) NOT NULL,
   `impreso` int(11) NOT NULL DEFAULT 0,
   `anulado` int(11) NOT NULL DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Volcado de datos para la tabla `ventas`
---
-
-INSERT INTO `ventas` (`idVenta`, `fechaProceso`, `fechaFactura`, `serie`, `timbrado`, `vencimiento`, `nroDocumento`, `idCliente`, `idCondicion`, `idFormaPago`, `idDeposito`, `idTipoComprobante`, `idPlazo`, `idMoneda`, `idUsuario`, `idPrecio`, `pagoInicial`, `totalExento`, `totalNeto`, `totalImpuesto`, `totalBruto`, `totalFactura`, `vencimientoFactura`, `impreso`, `anulado`) VALUES
-(1, 1671678000, 1671678000, '001-001-', '123456-7', '2022-11-30', 1, 2, 2, 1, 1, 1, 2, 1, 1, 1, 0, 35000, 10909.09, 1090.91, 10909.09, 47000, 0, 1, 0);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Disparadores `ventas`
@@ -1268,10 +1418,24 @@ DELIMITER ;
 --
 
 --
+-- Indices de la tabla `arqueocajas`
+--
+ALTER TABLE `arqueocajas`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idCaja` (`idCaja`);
+
+--
 -- Indices de la tabla `auditoria`
 --
 ALTER TABLE `auditoria`
   ADD PRIMARY KEY (`idAuditoria`),
+  ADD KEY `idUsuario` (`idUsuario`);
+
+--
+-- Indices de la tabla `cajas`
+--
+ALTER TABLE `cajas`
+  ADD PRIMARY KEY (`id`),
   ADD KEY `idUsuario` (`idUsuario`);
 
 --
@@ -1285,9 +1449,9 @@ ALTER TABLE `categoria`
 --
 ALTER TABLE `clientes`
   ADD PRIMARY KEY (`idCliente`),
+  ADD KEY `idTipoCliente` (`idTipoCliente`),
   ADD KEY `idPersona` (`idPersona`),
-  ADD KEY `idMoneda` (`idMoneda`),
-  ADD KEY `idTipoCliente` (`idTipoCliente`);
+  ADD KEY `idMoneda` (`idMoneda`);
 
 --
 -- Indices de la tabla `cobros`
@@ -1301,6 +1465,19 @@ ALTER TABLE `cobros`
 --
 ALTER TABLE `colores`
   ADD PRIMARY KEY (`idColor`);
+
+--
+-- Indices de la tabla `compras`
+--
+ALTER TABLE `compras`
+  ADD PRIMARY KEY (`idCompra`),
+  ADD KEY `idProveedor` (`idProveedor`),
+  ADD KEY `idCondicion` (`idCondicion`),
+  ADD KEY `idFormaPago` (`idFormaPago`),
+  ADD KEY `idDeposito` (`idDeposito`),
+  ADD KEY `idPlazo` (`idPlazo`),
+  ADD KEY `idMoneda` (`idMoneda`),
+  ADD KEY `idUsuario` (`idUsuario`);
 
 --
 -- Indices de la tabla `condiciones`
@@ -1319,7 +1496,13 @@ ALTER TABLE `cotizaciones`
 -- Indices de la tabla `cuentascobrar`
 --
 ALTER TABLE `cuentascobrar`
-  ADD PRIMARY KEY (`id`,`cuota`) USING BTREE;
+  ADD PRIMARY KEY (`id`,`cuota`);
+
+--
+-- Indices de la tabla `cuentaspagar`
+--
+ALTER TABLE `cuentaspagar`
+  ADD PRIMARY KEY (`id`,`cuota`);
 
 --
 -- Indices de la tabla `departamentos`
@@ -1339,31 +1522,39 @@ ALTER TABLE `deposito`
 --
 ALTER TABLE `detallecobro`
   ADD PRIMARY KEY (`idDetalleCobro`),
-  ADD KEY `idCuentaCobrar` (`idCuentaCobrar`),
-  ADD KEY `idCobro` (`idCobro`);
+  ADD KEY `idCobro` (`idCobro`),
+  ADD KEY `idCuentaCobrar` (`idCuentaCobrar`);
+
+--
+-- Indices de la tabla `detallecompra`
+--
+ALTER TABLE `detallecompra`
+  ADD PRIMARY KEY (`idDetalleCompra`,`idCompra`),
+  ADD KEY `codBarra` (`codBarra`),
+  ADD KEY `idCompra` (`idCompra`);
 
 --
 -- Indices de la tabla `detalleprecio`
 --
 ALTER TABLE `detalleprecio`
   ADD PRIMARY KEY (`idPrecioDetalle`),
-  ADD KEY `idPrecio` (`idPrecio`,`codBarra`),
+  ADD KEY `idPrecio` (`idPrecio`),
   ADD KEY `codBarra` (`codBarra`);
+
+--
+-- Indices de la tabla `detallespagos`
+--
+ALTER TABLE `detallespagos`
+  ADD PRIMARY KEY (`idDetallePago`),
+  ADD KEY `idPago` (`idPago`),
+  ADD KEY `idCuentaPagar` (`idCuentaPagar`);
 
 --
 -- Indices de la tabla `detalleventa`
 --
 ALTER TABLE `detalleventa`
   ADD PRIMARY KEY (`idDetalleVenta`,`idVenta`),
-  ADD KEY `idVenta` (`idVenta`,`codBarra`),
-  ADD KEY `codBara` (`codBarra`);
-
---
--- Indices de la tabla `devoluciones`
---
-ALTER TABLE `devoluciones`
-  ADD PRIMARY KEY (`idDevolucion`),
-  ADD KEY `idVenta` (`idVenta`);
+  ADD KEY `codBarra` (`codBarra`);
 
 --
 -- Indices de la tabla `diseño`
@@ -1390,7 +1581,8 @@ ALTER TABLE `empresa`
 --
 ALTER TABLE `facturasanuladas`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idVenta` (`idVenta`);
+  ADD KEY `idVenta` (`idVenta`),
+  ADD KEY `idCliente` (`idCliente`);
 
 --
 -- Indices de la tabla `formapagos`
@@ -1424,11 +1616,18 @@ ALTER TABLE `monedas`
   ADD PRIMARY KEY (`idMoneda`);
 
 --
+-- Indices de la tabla `pagos`
+--
+ALTER TABLE `pagos`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idProveedor` (`idProveedor`);
+
+--
 -- Indices de la tabla `permisos`
 --
 ALTER TABLE `permisos`
   ADD PRIMARY KEY (`idPermiso`),
-  ADD KEY `idRol` (`idRol`,`idMenu`),
+  ADD KEY `idRol` (`idRol`),
   ADD KEY `idMenu` (`idMenu`);
 
 --
@@ -1437,6 +1636,13 @@ ALTER TABLE `permisos`
 ALTER TABLE `personas`
   ADD PRIMARY KEY (`idPersona`),
   ADD KEY `idLocalidad` (`idLocalidad`);
+
+--
+-- Indices de la tabla `planilla`
+--
+ALTER TABLE `planilla`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idCaja` (`idCaja`);
 
 --
 -- Indices de la tabla `plazos`
@@ -1448,7 +1654,8 @@ ALTER TABLE `plazos`
 -- Indices de la tabla `plazosdetalle`
 --
 ALTER TABLE `plazosdetalle`
-  ADD PRIMARY KEY (`idDetallePlazo`,`idPlazo`) USING BTREE;
+  ADD PRIMARY KEY (`idDetallePlazo`,`idPlazo`),
+  ADD KEY `idPlazo` (`idPlazo`);
 
 --
 -- Indices de la tabla `precios`
@@ -1462,24 +1669,40 @@ ALTER TABLE `precios`
 --
 ALTER TABLE `producto`
   ADD PRIMARY KEY (`idProducto`),
-  ADD KEY `idCategoria` (`idCategoria`);
+  ADD KEY `idCategoria` (`idCategoria`),
+  ADD KEY `IdMarca` (`IdMarca`);
 
 --
 -- Indices de la tabla `productodetalle`
 --
 ALTER TABLE `productodetalle`
-  ADD PRIMARY KEY (`codBarra`) USING BTREE,
+  ADD PRIMARY KEY (`codBarra`),
   ADD KEY `idProducto` (`idProducto`),
-  ADD KEY `idColor` (`idColor`,`idDiseño`,`idMarca`,`idTamaño`),
-  ADD KEY `idDiseño` (`idDiseño`),
-  ADD KEY `idMarca` (`idMarca`),
-  ADD KEY `idTamaño` (`idTamaño`);
+  ADD KEY `idTamaño` (`idTamaño`),
+  ADD KEY `idColor` (`idColor`),
+  ADD KEY `idDiseño` (`idDiseño`);
+
+--
+-- Indices de la tabla `proveedores`
+--
+ALTER TABLE `proveedores`
+  ADD PRIMARY KEY (`idProveedor`),
+  ADD KEY `idPersona` (`idPersona`),
+  ADD KEY `idMoneda` (`idMoneda`);
 
 --
 -- Indices de la tabla `roles`
 --
 ALTER TABLE `roles`
   ADD PRIMARY KEY (`idRol`);
+
+--
+-- Indices de la tabla `stock`
+--
+ALTER TABLE `stock`
+  ADD PRIMARY KEY (`codBarra`,`idDeposito`),
+  ADD KEY `codBarra` (`codBarra`),
+  ADD KEY `idDeposito` (`idDeposito`);
 
 --
 -- Indices de la tabla `sucursales`
@@ -1493,7 +1716,8 @@ ALTER TABLE `sucursales`
 --
 ALTER TABLE `talonarios`
   ADD PRIMARY KEY (`idTalonario`),
-  ADD KEY `idTipoComprobante` (`idTipoComprobante`);
+  ADD KEY `idTipoComprobante` (`idTipoComprobante`),
+  ADD KEY `idUsuario` (`idUsuario`);
 
 --
 -- Indices de la tabla `tamaño`
@@ -1518,7 +1742,7 @@ ALTER TABLE `tipocomprobante`
 --
 ALTER TABLE `usuarios`
   ADD PRIMARY KEY (`id_usuario`),
-  ADD KEY `idRol` (`idRol`,`idEmpleado`),
+  ADD KEY `idRol` (`idRol`),
   ADD KEY `idEmpleado` (`idEmpleado`);
 
 --
@@ -1526,19 +1750,26 @@ ALTER TABLE `usuarios`
 --
 ALTER TABLE `ventas`
   ADD PRIMARY KEY (`idVenta`),
-  ADD KEY `idMoneda` (`idMoneda`),
-  ADD KEY `idDeposito` (`idDeposito`),
-  ADD KEY `idTipoDoc` (`idTipoComprobante`),
-  ADD KEY `idPlazo` (`idPlazo`),
-  ADD KEY `idUsuario` (`idUsuario`),
-  ADD KEY `idPrecio` (`idPrecio`),
   ADD KEY `idCliente` (`idCliente`),
+  ADD KEY `idCondicion` (`idCondicion`),
   ADD KEY `idFormaPago` (`idFormaPago`),
-  ADD KEY `idCondicion` (`idCondicion`);
+  ADD KEY `idDeposito` (`idDeposito`),
+  ADD KEY `idTipoComprobante` (`idTipoComprobante`),
+  ADD KEY `idPlazo` (`idPlazo`),
+  ADD KEY `idMoneda` (`idMoneda`),
+  ADD KEY `idMoneda_2` (`idMoneda`),
+  ADD KEY `idUsuario` (`idUsuario`),
+  ADD KEY `idPrecio` (`idPrecio`);
 
 --
 -- Restricciones para tablas volcadas
 --
+
+--
+-- Filtros para la tabla `arqueocajas`
+--
+ALTER TABLE `arqueocajas`
+  ADD CONSTRAINT `arqueocajas_ibfk_1` FOREIGN KEY (`idCaja`) REFERENCES `cajas` (`id`);
 
 --
 -- Filtros para la tabla `auditoria`
@@ -1547,18 +1778,36 @@ ALTER TABLE `auditoria`
   ADD CONSTRAINT `auditoria_ibfk_1` FOREIGN KEY (`idUsuario`) REFERENCES `usuarios` (`id_usuario`);
 
 --
+-- Filtros para la tabla `cajas`
+--
+ALTER TABLE `cajas`
+  ADD CONSTRAINT `cajas_ibfk_1` FOREIGN KEY (`idUsuario`) REFERENCES `usuarios` (`id_usuario`);
+
+--
 -- Filtros para la tabla `clientes`
 --
 ALTER TABLE `clientes`
-  ADD CONSTRAINT `clientes_ibfk_2` FOREIGN KEY (`idPersona`) REFERENCES `personas` (`idPersona`),
-  ADD CONSTRAINT `clientes_ibfk_3` FOREIGN KEY (`idMoneda`) REFERENCES `monedas` (`idMoneda`),
-  ADD CONSTRAINT `clientes_ibfk_4` FOREIGN KEY (`idTipoCliente`) REFERENCES `tipocliente` (`idTipoCliente`);
+  ADD CONSTRAINT `clientes_ibfk_1` FOREIGN KEY (`idPersona`) REFERENCES `personas` (`idPersona`),
+  ADD CONSTRAINT `clientes_ibfk_2` FOREIGN KEY (`idTipoCliente`) REFERENCES `tipocliente` (`idTipoCliente`),
+  ADD CONSTRAINT `clientes_ibfk_3` FOREIGN KEY (`idMoneda`) REFERENCES `monedas` (`idMoneda`);
 
 --
 -- Filtros para la tabla `cobros`
 --
 ALTER TABLE `cobros`
   ADD CONSTRAINT `cobros_ibfk_1` FOREIGN KEY (`idCliente`) REFERENCES `clientes` (`idCliente`);
+
+--
+-- Filtros para la tabla `compras`
+--
+ALTER TABLE `compras`
+  ADD CONSTRAINT `compras_ibfk_1` FOREIGN KEY (`idFormaPago`) REFERENCES `formapagos` (`idFormaPago`),
+  ADD CONSTRAINT `compras_ibfk_2` FOREIGN KEY (`idPlazo`) REFERENCES `plazos` (`idPlazo`),
+  ADD CONSTRAINT `compras_ibfk_3` FOREIGN KEY (`idCondicion`) REFERENCES `condiciones` (`idCondicion`),
+  ADD CONSTRAINT `compras_ibfk_4` FOREIGN KEY (`idProveedor`) REFERENCES `proveedores` (`idProveedor`),
+  ADD CONSTRAINT `compras_ibfk_5` FOREIGN KEY (`idDeposito`) REFERENCES `deposito` (`idDeposito`),
+  ADD CONSTRAINT `compras_ibfk_6` FOREIGN KEY (`idMoneda`) REFERENCES `monedas` (`idMoneda`),
+  ADD CONSTRAINT `compras_ibfk_7` FOREIGN KEY (`idUsuario`) REFERENCES `usuarios` (`id_usuario`);
 
 --
 -- Filtros para la tabla `cotizaciones`
@@ -1580,24 +1829,30 @@ ALTER TABLE `detallecobro`
   ADD CONSTRAINT `detallecobro_ibfk_2` FOREIGN KEY (`idCuentaCobrar`) REFERENCES `cuentascobrar` (`id`);
 
 --
+-- Filtros para la tabla `detallecompra`
+--
+ALTER TABLE `detallecompra`
+  ADD CONSTRAINT `detallecompra_ibfk_1` FOREIGN KEY (`idCompra`) REFERENCES `compras` (`idCompra`),
+  ADD CONSTRAINT `detallecompra_ibfk_2` FOREIGN KEY (`codBarra`) REFERENCES `productodetalle` (`codBarra`);
+
+--
 -- Filtros para la tabla `detalleprecio`
 --
 ALTER TABLE `detalleprecio`
-  ADD CONSTRAINT `detalleprecio_ibfk_1` FOREIGN KEY (`idPrecio`) REFERENCES `precios` (`idPrecio`),
-  ADD CONSTRAINT `detalleprecio_ibfk_2` FOREIGN KEY (`codBarra`) REFERENCES `productodetalle` (`codBarra`);
+  ADD CONSTRAINT `detalleprecio_ibfk_1` FOREIGN KEY (`idPrecio`) REFERENCES `precios` (`idPrecio`);
+
+--
+-- Filtros para la tabla `detallespagos`
+--
+ALTER TABLE `detallespagos`
+  ADD CONSTRAINT `detallespagos_ibfk_1` FOREIGN KEY (`idPago`) REFERENCES `pagos` (`id`),
+  ADD CONSTRAINT `detallespagos_ibfk_2` FOREIGN KEY (`idCuentaPagar`) REFERENCES `cuentaspagar` (`id`);
 
 --
 -- Filtros para la tabla `detalleventa`
 --
 ALTER TABLE `detalleventa`
-  ADD CONSTRAINT `detalleventa_ibfk_2` FOREIGN KEY (`codBarra`) REFERENCES `productodetalle` (`codBarra`),
-  ADD CONSTRAINT `detalleventa_ibfk_3` FOREIGN KEY (`idVenta`) REFERENCES `ventas` (`idVenta`);
-
---
--- Filtros para la tabla `devoluciones`
---
-ALTER TABLE `devoluciones`
-  ADD CONSTRAINT `devoluciones_ibfk_1` FOREIGN KEY (`idVenta`) REFERENCES `ventas` (`idVenta`);
+  ADD CONSTRAINT `detalleventa_ibfk_1` FOREIGN KEY (`codBarra`) REFERENCES `productodetalle` (`codBarra`);
 
 --
 -- Filtros para la tabla `empleados`
@@ -1615,13 +1870,20 @@ ALTER TABLE `empresa`
 -- Filtros para la tabla `facturasanuladas`
 --
 ALTER TABLE `facturasanuladas`
-  ADD CONSTRAINT `facturasanuladas_ibfk_1` FOREIGN KEY (`idVenta`) REFERENCES `ventas` (`idVenta`);
+  ADD CONSTRAINT `facturasanuladas_ibfk_1` FOREIGN KEY (`idVenta`) REFERENCES `ventas` (`idVenta`),
+  ADD CONSTRAINT `facturasanuladas_ibfk_2` FOREIGN KEY (`idCliente`) REFERENCES `clientes` (`idCliente`);
 
 --
 -- Filtros para la tabla `localidades`
 --
 ALTER TABLE `localidades`
   ADD CONSTRAINT `localidades_ibfk_1` FOREIGN KEY (`idDepartamento`) REFERENCES `departamentos` (`idDepartamento`);
+
+--
+-- Filtros para la tabla `pagos`
+--
+ALTER TABLE `pagos`
+  ADD CONSTRAINT `pagos_ibfk_1` FOREIGN KEY (`idProveedor`) REFERENCES `proveedores` (`idProveedor`);
 
 --
 -- Filtros para la tabla `permisos`
@@ -1637,26 +1899,45 @@ ALTER TABLE `personas`
   ADD CONSTRAINT `personas_ibfk_1` FOREIGN KEY (`idLocalidad`) REFERENCES `localidades` (`idLocalidad`);
 
 --
--- Filtros para la tabla `precios`
+-- Filtros para la tabla `planilla`
 --
-ALTER TABLE `precios`
-  ADD CONSTRAINT `precios_ibfk_1` FOREIGN KEY (`idMoneda`) REFERENCES `monedas` (`idMoneda`);
+ALTER TABLE `planilla`
+  ADD CONSTRAINT `planilla_ibfk_1` FOREIGN KEY (`idCaja`) REFERENCES `cajas` (`id`);
+
+--
+-- Filtros para la tabla `plazosdetalle`
+--
+ALTER TABLE `plazosdetalle`
+  ADD CONSTRAINT `plazosdetalle_ibfk_1` FOREIGN KEY (`idPlazo`) REFERENCES `plazos` (`idPlazo`);
 
 --
 -- Filtros para la tabla `producto`
 --
 ALTER TABLE `producto`
-  ADD CONSTRAINT `producto_ibfk_1` FOREIGN KEY (`idCategoria`) REFERENCES `categoria` (`idCategoria`);
+  ADD CONSTRAINT `producto_ibfk_1` FOREIGN KEY (`idCategoria`) REFERENCES `categoria` (`idCategoria`),
+  ADD CONSTRAINT `producto_ibfk_2` FOREIGN KEY (`IdMarca`) REFERENCES `marca` (`idMarca`);
 
 --
 -- Filtros para la tabla `productodetalle`
 --
 ALTER TABLE `productodetalle`
-  ADD CONSTRAINT `productodetalle_ibfk_1` FOREIGN KEY (`idProducto`) REFERENCES `producto` (`idProducto`),
-  ADD CONSTRAINT `productodetalle_ibfk_2` FOREIGN KEY (`idColor`) REFERENCES `colores` (`idColor`),
-  ADD CONSTRAINT `productodetalle_ibfk_3` FOREIGN KEY (`idDiseño`) REFERENCES `diseño` (`idDiseño`),
-  ADD CONSTRAINT `productodetalle_ibfk_4` FOREIGN KEY (`idMarca`) REFERENCES `marca` (`idMarca`),
-  ADD CONSTRAINT `productodetalle_ibfk_5` FOREIGN KEY (`idTamaño`) REFERENCES `tamaño` (`idTamaño`);
+  ADD CONSTRAINT `productodetalle_ibfk_1` FOREIGN KEY (`idColor`) REFERENCES `colores` (`idColor`),
+  ADD CONSTRAINT `productodetalle_ibfk_2` FOREIGN KEY (`idProducto`) REFERENCES `producto` (`idProducto`),
+  ADD CONSTRAINT `productodetalle_ibfk_3` FOREIGN KEY (`idTamaño`) REFERENCES `tamaño` (`idTamaño`),
+  ADD CONSTRAINT `productodetalle_ibfk_4` FOREIGN KEY (`idDiseño`) REFERENCES `diseño` (`idDiseño`);
+
+--
+-- Filtros para la tabla `proveedores`
+--
+ALTER TABLE `proveedores`
+  ADD CONSTRAINT `proveedores_ibfk_1` FOREIGN KEY (`idPersona`) REFERENCES `personas` (`idPersona`);
+
+--
+-- Filtros para la tabla `stock`
+--
+ALTER TABLE `stock`
+  ADD CONSTRAINT `stock_ibfk_1` FOREIGN KEY (`idDeposito`) REFERENCES `deposito` (`idDeposito`),
+  ADD CONSTRAINT `stock_ibfk_2` FOREIGN KEY (`codBarra`) REFERENCES `productodetalle` (`codBarra`);
 
 --
 -- Filtros para la tabla `sucursales`
@@ -1668,7 +1949,8 @@ ALTER TABLE `sucursales`
 -- Filtros para la tabla `talonarios`
 --
 ALTER TABLE `talonarios`
-  ADD CONSTRAINT `talonarios_ibfk_1` FOREIGN KEY (`idTipoComprobante`) REFERENCES `tipocomprobante` (`idTipoComprobante`);
+  ADD CONSTRAINT `talonarios_ibfk_1` FOREIGN KEY (`idTipoComprobante`) REFERENCES `tipocomprobante` (`idTipoComprobante`),
+  ADD CONSTRAINT `talonarios_ibfk_2` FOREIGN KEY (`idUsuario`) REFERENCES `usuarios` (`id_usuario`);
 
 --
 -- Filtros para la tabla `usuarios`
@@ -1681,15 +1963,15 @@ ALTER TABLE `usuarios`
 -- Filtros para la tabla `ventas`
 --
 ALTER TABLE `ventas`
-  ADD CONSTRAINT `ventas_ibfk_1` FOREIGN KEY (`idMoneda`) REFERENCES `monedas` (`idMoneda`),
-  ADD CONSTRAINT `ventas_ibfk_10` FOREIGN KEY (`idCliente`) REFERENCES `clientes` (`idCliente`) ON DELETE NO ACTION,
-  ADD CONSTRAINT `ventas_ibfk_11` FOREIGN KEY (`idFormaPago`) REFERENCES `formapagos` (`idFormaPago`),
-  ADD CONSTRAINT `ventas_ibfk_12` FOREIGN KEY (`idCondicion`) REFERENCES `condiciones` (`idCondicion`),
-  ADD CONSTRAINT `ventas_ibfk_3` FOREIGN KEY (`idDeposito`) REFERENCES `deposito` (`idDeposito`),
-  ADD CONSTRAINT `ventas_ibfk_5` FOREIGN KEY (`idTipoComprobante`) REFERENCES `tipocomprobante` (`idTipoComprobante`),
-  ADD CONSTRAINT `ventas_ibfk_6` FOREIGN KEY (`idPlazo`) REFERENCES `plazos` (`idPlazo`),
-  ADD CONSTRAINT `ventas_ibfk_7` FOREIGN KEY (`idUsuario`) REFERENCES `usuarios` (`id_usuario`),
-  ADD CONSTRAINT `ventas_ibfk_9` FOREIGN KEY (`idPrecio`) REFERENCES `precios` (`idPrecio`);
+  ADD CONSTRAINT `ventas_ibfk_1` FOREIGN KEY (`idCliente`) REFERENCES `clientes` (`idCliente`),
+  ADD CONSTRAINT `ventas_ibfk_2` FOREIGN KEY (`idUsuario`) REFERENCES `usuarios` (`id_usuario`),
+  ADD CONSTRAINT `ventas_ibfk_3` FOREIGN KEY (`idPrecio`) REFERENCES `precios` (`idPrecio`),
+  ADD CONSTRAINT `ventas_ibfk_4` FOREIGN KEY (`idTipoComprobante`) REFERENCES `tipocomprobante` (`idTipoComprobante`),
+  ADD CONSTRAINT `ventas_ibfk_5` FOREIGN KEY (`idMoneda`) REFERENCES `monedas` (`idMoneda`),
+  ADD CONSTRAINT `ventas_ibfk_6` FOREIGN KEY (`idDeposito`) REFERENCES `deposito` (`idDeposito`),
+  ADD CONSTRAINT `ventas_ibfk_7` FOREIGN KEY (`idCondicion`) REFERENCES `condiciones` (`idCondicion`),
+  ADD CONSTRAINT `ventas_ibfk_8` FOREIGN KEY (`idFormaPago`) REFERENCES `formapagos` (`idFormaPago`),
+  ADD CONSTRAINT `ventas_ibfk_9` FOREIGN KEY (`idPlazo`) REFERENCES `plazos` (`idPlazo`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
