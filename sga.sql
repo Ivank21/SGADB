@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 20-02-2023 a las 10:39:55
+-- Tiempo de generación: 22-02-2023 a las 10:41:14
 -- Versión del servidor: 10.4.27-MariaDB
 -- Versión de PHP: 8.0.25
 
@@ -183,6 +183,82 @@ CREATE TABLE `compras` (
   `anulado` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Disparadores `compras`
+--
+DELIMITER $$
+CREATE TRIGGER `cuentas_pagar` AFTER INSERT ON `compras` FOR EACH ROW BEGIN
+	DECLARE cuotas INT;
+    DECLARE irregular INT;
+    DECLARE decimales INT;
+    DECLARE cuotaactual INT;
+	DECLARE dias INT;     
+    DECLARE id INT;
+    DECLARE importecuota FLOAT(18,2); 
+    DECLARE ultimacuota FLOAT(18,2);
+    DECLARE vence BIGINT; 
+	DECLARE msg VARCHAR(3000);    
+
+IF(NEW.idCondicion = 2) THEN
+	IF NEW.idDeposito = 0 THEN
+		SET msg = 'No se ha especificado deposito';
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = msg; 
+	END IF;
+    
+    SELECT IFNULL(p.cuotas, 1), IFNULL(p.irregular, 0)
+	INTO cuotas, irregular
+    FROM plazos p
+    WHERE p.idPlazo = NEW.idPlazo;
+    
+    SELECT IFNULL(m.decimales, 0) INTO decimales
+    FROM monedas m 
+    WHERE m.idMoneda = NEW.idMoneda;
+    
+    IF NEW.pagoInicial > 0 THEN
+		SET importecuota = ROUND(((NEW.totalFactura - NEW.pagoInicial) / cuotas), decimales);
+        SET ultimacuota = (NEW.totalFactura - NEW.pagoInicial) - (importecuota * (cuotas - 1));
+    ELSE
+    	SET importecuota = ROUND((NEW.totalFactura / cuotas), decimales);
+        SET ultimacuota = NEW.totalFactura - (importecuota * (cuotas - 1));
+    END IF;
+    
+	SET vence = 0;
+ 
+	SELECT IFNULL(MAX(id), 0) INTO id FROM cuentaspagar;
+
+	SET cuotaactual = 1;
+
+    WHILE cuotaactual <= cuotas DO
+		IF irregular > 0 THEN
+			SELECT pd.dias INTO dias 
+            FROM plazosdetalle pd 
+            WHERE pd.idPlazo = NEW.idPlazo
+            AND pd.cuota = cuotaactual;
+
+			SELECT UNIX_TIMESTAMP(DATE_ADD(FROM_UNIXTIME(NEW.fechaLlegada), INTERVAL dias DAY)) INTO vence;
+		ELSE 
+			SELECT UNIX_TIMESTAMP(DATE_ADD(FROM_UNIXTIME(NEW.fechaLlegada), INTERVAL cuotaactual MONTH)) INTO vence;
+		END IF;
+
+		IF (cuotaactual = cuotas) THEN
+			SET importecuota = ultimacuota;
+		END IF;
+        
+		BEGIN
+        	INSERT INTO cuentaspagar VALUES((id + 1), cuotaactual, importecuota, 0.0, vence, NEW.idCompra, 'compras');
+		END;
+        
+		SET cuotaactual = (cuotaactual + 1) ;
+	END WHILE;
+	
+    IF NEW.pagoInicial > 0 THEN
+		INSERT INTO cuentaspagar VALUES((id + 1), 0, 0.0, NEW.pagoInicial, vence, NEW.idCompra, 'compras');
+	END IF;
+    END IF;
+END
+$$
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
@@ -353,21 +429,6 @@ CREATE TABLE `detallecompra` (
 -- Disparadores `detallecompra`
 --
 DELIMITER $$
-CREATE TRIGGER `sotck_update_detallecompra_delete` AFTER DELETE ON `detallecompra` FOR EACH ROW BEGIN  
-	DECLARE depositoId INT;
-
-	SELECT idDeposito
-	INTO depositoId
-	FROM compras 
-	WHERE idCompra = OLD.idCompra;
-    
-    UPDATE stock SET 
-    stockActual = stockActual - OLD.cantidad
-    WHERE codBarra = OLD.codBarra AND idDeposito = depositoId;
-END
-$$
-DELIMITER ;
-DELIMITER $$
 CREATE TRIGGER `stock_insert_detallecompra_insert` AFTER INSERT ON `detallecompra` FOR EACH ROW BEGIN
 	DECLARE depositoId INT;
 	DECLARE cantidad INT;
@@ -392,6 +453,21 @@ CREATE TRIGGER `stock_insert_detallecompra_insert` AFTER INSERT ON `detallecompr
     	ultimaCompra = fechaCompra
     	WHERE codBarra = NEW.codBarra AND idDeposito = depositoId;
     END IF;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `stock_update_detallecompra_delete` AFTER DELETE ON `detallecompra` FOR EACH ROW BEGIN  
+	DECLARE depositoId INT;
+
+	SELECT idDeposito
+	INTO depositoId
+	FROM compras 
+	WHERE idCompra = OLD.idCompra;
+    
+    UPDATE stock SET 
+    stockActual = stockActual - OLD.cantidad
+    WHERE codBarra = OLD.codBarra AND idDeposito = depositoId;
 END
 $$
 DELIMITER ;
@@ -423,6 +499,22 @@ CREATE TABLE `detallespagos` (
   `cuota` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Disparadores `detallespagos`
+--
+DELIMITER $$
+CREATE TRIGGER `delete_pago` AFTER DELETE ON `detallespagos` FOR EACH ROW UPDATE cuentaspagar
+SET pagado = 0
+WHERE id = OLD.idCuentaPagar AND cuota = OLD.cuota
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `update_cuenta_pagar` AFTER INSERT ON `detallespagos` FOR EACH ROW UPDATE cuentaspagar
+SET pagado = NEW.importe 
+WHERE id = NEW.idCuentaPagar AND cuota = NEW.cuota
+$$
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
@@ -447,13 +539,23 @@ CREATE TABLE `detalleventa` (
 -- Disparadores `detalleventa`
 --
 DELIMITER $$
-CREATE TRIGGER `product_update_detalleVenta_delete` AFTER DELETE ON `detalleventa` FOR EACH ROW UPDATE productodetalle 
-SET productodetalle.stockActual = productodetalle.stockActual + OLD.cantidad WHERE productodetalle.codBarra = OLD.codBarra
-$$
-DELIMITER ;
-DELIMITER $$
-CREATE TRIGGER `product_update_detalleVenta_insert` AFTER INSERT ON `detalleventa` FOR EACH ROW UPDATE productodetalle 
-SET productodetalle.stockActual = productodetalle.stockActual - NEW.cantidad WHERE productodetalle.codBarra = NEW.codBarra
+CREATE TRIGGER `stock_update_detalleventa_insert` AFTER INSERT ON `detalleventa` FOR EACH ROW BEGIN
+    DECLARE
+        depositoId INT; DECLARE cantidad INT;
+    SELECT
+        idDeposito
+    INTO depositoId
+FROM
+    ventas
+WHERE
+    idVenta = NEW.idVenta;
+UPDATE
+    stock
+SET
+    stockActual = stockActual - NEW.cantidad
+WHERE
+    codBarra = NEW.codBarra AND idDeposito = depositoId;
+END
 $$
 DELIMITER ;
 
@@ -544,7 +646,11 @@ DELIMITER $$
 CREATE TRIGGER `anular_venta` AFTER INSERT ON `facturasanuladas` FOR EACH ROW BEGIN 
 	DECLARE total INT;
     DECLARE idCliente INT;
-   
+    DECLARE depositoId INT;
+    DECLARE cantidad INT;
+    DECLARE codBarra VARCHAR(75);
+    DECLARE cur CURSOR FOR SELECT codbarra, cantidad FROM detalleventa WHERE idVenta = NEW.idVenta;
+    
 	UPDATE ventas SET anulado = 1 
 	WHERE idVenta = NEW.idVenta;
 
@@ -560,6 +666,20 @@ CREATE TRIGGER `anular_venta` AFTER INSERT ON `facturasanuladas` FOR EACH ROW BE
     UPDATE clientes 
     SET limiteCredito = limiteCredito + totalFactura
     WHERE idCliente = idCliente;
+
+	SELECT idDeposito
+	INTO depositoId
+	FROM ventas
+	WHERE idVenta = NEW.idVenta;
+    
+    OPEN cur;
+    	read_loop: LOOP
+            FETCH cur INTO codBarra, cantidad;
+    			UPDATE stock SET 
+    			stockActual = stockActual + cantidad
+    			WHERE codBarra = codBarra AND idDeposito = depositoId;
+        END LOOP;
+    CLOSE cur;    
 END
 $$
 DELIMITER ;
