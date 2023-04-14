@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 28-03-2023 a las 02:02:47
+-- Tiempo de generación: 14-04-2023 a las 22:50:30
 -- Versión del servidor: 10.4.27-MariaDB
 -- Versión de PHP: 8.0.25
 
@@ -20,6 +20,69 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `sga`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `ajustedetalle`
+--
+
+CREATE TABLE `ajustedetalle` (
+  `codBarra` varchar(50) NOT NULL,
+  `can_actual` int(11) NOT NULL,
+  `can_ajustes` int(11) NOT NULL,
+  `idajustedetalle` int(11) NOT NULL,
+  `idajustes` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Disparadores `ajustedetalle`
+--
+DELIMITER $$
+CREATE TRIGGER `stock_update_ajustestock_delete` AFTER DELETE ON `ajustedetalle` FOR EACH ROW BEGIN
+	DECLARE depositoId INT;
+    
+    SELECT deposito
+    INTO depositoId
+    FROM ajustestock
+    WHERE idajustes = OLD.idajustes;
+    
+    UPDATE stock 
+    SET stockActual = OLD.can_actual
+    WHERE codBarra = OLD.codBarra AND idDeposito = depositoId;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `stock_update_ajustestock_insert` AFTER INSERT ON `ajustedetalle` FOR EACH ROW BEGIN
+	DECLARE depositoId INT;
+    
+    SELECT deposito
+    INTO depositoId
+    FROM ajustestock
+    WHERE idajustes = NEW.idajustes;
+    
+    UPDATE stock 
+    SET stockActual = NEW.can_ajustes
+    WHERE codBarra = NEW.codBarra AND idDeposito = depositoId;
+END
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `ajustestock`
+--
+
+CREATE TABLE `ajustestock` (
+  `idajustes` int(11) NOT NULL,
+  `motivo` varchar(100) NOT NULL,
+  `fechaajuste` bigint(20) NOT NULL,
+  `aprovado` int(11) NOT NULL,
+  `contabilizado` int(11) NOT NULL,
+  `deposito` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -137,13 +200,6 @@ CREATE TABLE `cobros` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Volcado de datos para la tabla `cobros`
---
-
-INSERT INTO `cobros` (`id`, `idCliente`, `fecha`, `nroRecibo`, `totalCobro`, `impreso`) VALUES
-(1, 1, 1679889600, 1, 150000.00, 0);
-
---
 -- Disparadores `cobros`
 --
 DELIMITER $$
@@ -188,10 +244,9 @@ CREATE TABLE `compras` (
   `idCompra` int(11) NOT NULL,
   `fechaProceso` bigint(20) NOT NULL,
   `fechaLlegada` bigint(20) NOT NULL,
-  `serie` varchar(50) NOT NULL,
   `timbrado` varchar(50) NOT NULL,
   `vencimiento` bigint(20) NOT NULL,
-  `nroDocumento` int(11) NOT NULL,
+  `nroFactura` varchar(20) NOT NULL,
   `idProveedor` int(11) NOT NULL,
   `idCondicion` int(11) NOT NULL,
   `idFormaPago` int(11) NOT NULL,
@@ -204,17 +259,17 @@ CREATE TABLE `compras` (
   `totalNeto` double NOT NULL,
   `totalImpuesto` double NOT NULL,
   `totalBruto` double NOT NULL,
-  `totalFactura` double NOT NULL,
-  `anulado` int(11) NOT NULL DEFAULT 0
+  `totalFactura` double NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `compras`
 --
 
-INSERT INTO `compras` (`idCompra`, `fechaProceso`, `fechaLlegada`, `serie`, `timbrado`, `vencimiento`, `nroDocumento`, `idProveedor`, `idCondicion`, `idFormaPago`, `idDeposito`, `idPlazo`, `idMoneda`, `idUsuario`, `pagoInicial`, `totalExento`, `totalNeto`, `totalImpuesto`, `totalBruto`, `totalFactura`, `anulado`) VALUES
-(1, 1679889600, 1679889600, '000-001', '123456-7', 1679889600, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 136363.6, 13636.4, 136363.6, 150000, 0),
-(2, 1679889600, 1679889600, '000-001', '123456-7', 1679889600, 1, 1, 2, 1, 1, 2, 1, 1, 0, 0, 20454.54, 2045.46, 20454.54, 22500, 0);
+INSERT INTO `compras` (`idCompra`, `fechaProceso`, `fechaLlegada`, `timbrado`, `vencimiento`, `nroFactura`, `idProveedor`, `idCondicion`, `idFormaPago`, `idDeposito`, `idPlazo`, `idMoneda`, `idUsuario`, `pagoInicial`, `totalExento`, `totalNeto`, `totalImpuesto`, `totalBruto`, `totalFactura`) VALUES
+(1, 1681185600, 1681185600, '123456-7', 1681185600, '001-001-000001', 1, 1, 1, 1, 3, 1, 1, 0, 0, 34091, 3409, 34091, 37500),
+(2, 1681272000, 1681272000, '123456-7', 1681272000, '001-001-000002', 1, 1, 1, 1, 1, 1, 1, 0, 0, 1363.64, 136.36, 1363.64, 1500),
+(3, 1681444800, 1681444800, '123456-7', 1681444800, '001-001-000003', 1, 1, 1, 1, 1, 1, 1, 0, 0, 2909.1, 290.9, 2909.1, 3200);
 
 --
 -- Disparadores `compras`
@@ -339,14 +394,6 @@ CREATE TABLE `cuentascobrar` (
   `nombre_tabla` varchar(75) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Volcado de datos para la tabla `cuentascobrar`
---
-
-INSERT INTO `cuentascobrar` (`id`, `cuota`, `importe`, `pagado`, `vence`, `tabla_id`, `nombre_tabla`) VALUES
-(1, 1, 150000.00, 150000.00, 1680062400, 1, 'ventas'),
-(1, 2, 150000.00, 0.00, 1680148800, 1, 'ventas');
-
 -- --------------------------------------------------------
 
 --
@@ -362,14 +409,6 @@ CREATE TABLE `cuentaspagar` (
   `tabla_id` int(11) NOT NULL,
   `nombre_tabla` varchar(75) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `cuentaspagar`
---
-
-INSERT INTO `cuentaspagar` (`id`, `cuota`, `importe`, `pagado`, `vence`, `tabla_id`, `nombre_tabla`) VALUES
-(1, 1, 11250, 11250.00, 1680062400, 2, 'compras'),
-(1, 2, 11250, 0.00, 1680148800, 2, 'compras');
 
 -- --------------------------------------------------------
 
@@ -427,7 +466,8 @@ CREATE TABLE `deposito` (
 
 INSERT INTO `deposito` (`idDeposito`, `idSucursal`, `nombre`, `activo`) VALUES
 (1, 1, 'Central', 1),
-(2, 2, 'zcdc', 0);
+(2, 2, 'zcdc', 0),
+(3, 3, 'Prueba200', 0);
 
 -- --------------------------------------------------------
 
@@ -442,13 +482,6 @@ CREATE TABLE `detallecobro` (
   `importe` float(16,2) NOT NULL,
   `cuota` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `detallecobro`
---
-
-INSERT INTO `detallecobro` (`idDetalleCobro`, `idCobro`, `idCuentaCobrar`, `importe`, `cuota`) VALUES
-(1, 1, 1, 150000.00, 1);
 
 --
 -- Disparadores `detallecobro`
@@ -491,12 +524,49 @@ CREATE TABLE `detallecompra` (
 --
 
 INSERT INTO `detallecompra` (`idDetalleCompra`, `idCompra`, `codBarra`, `descripcion`, `precioBruto`, `precioNeto`, `cantidad`, `descuento`, `bonificacion`, `impuesto`, `total`) VALUES
-(1, 1, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 7500, 136363.6, 20, 0, 0, 13636.399999999994, 150000),
-(1, 2, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 7500, 20454.54, 3, 0, 0, 2045.4599999999991, 22500);
+(1, 1, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 1500, 34091, 25, 0, 0, 3408.9999999999973, 37500),
+(1, 2, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 1500, 1363.64, 1, 0, 0, 136.3599999999999, 1500),
+(1, 3, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 1600, 2909.1, 2, 0, 0, 290.9000000000001, 3200);
 
 --
 -- Disparadores `detallecompra`
 --
+DELIMITER $$
+CREATE TRIGGER `detallecompra_delete` AFTER DELETE ON `detallecompra` FOR EACH ROW BEGIN  
+	DECLARE depositoId INT;
+    DECLARE id_pago INT;
+    DECLARE idCtaPagar INT;
+    
+    SELECT idCuentaPagar
+    INTO idCtaPagar
+    FROM cuentaspagar
+    WHERE tabla_id = OLD.idCompra AND nombre_tabla = 'compras';
+    
+    SELECT idPago
+    INTO id_pago
+    FROM detallespagos
+    WHERE idCuentaPagar = idCtaPagar;
+    
+    DELETE FROM cuentaspagar
+    WHERE id = idCtaPagar;
+    
+    DELETE FROM detallespagos
+    WHERE idCuentaPagar = idCtaPagar;
+    
+    DELETE FROM pagos
+    WHERE idPago = id_pago;
+
+	SELECT idDeposito
+	INTO depositoId
+	FROM compras 
+	WHERE idCompra = OLD.idCompra;
+    
+    UPDATE stock SET 
+    stockActual = stockActual - OLD.cantidad
+    WHERE codBarra = OLD.codBarra AND idDeposito = depositoId;
+END
+$$
+DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER `stock_insert_detallecompra_insert` AFTER INSERT ON `detallecompra` FOR EACH ROW BEGIN
 	DECLARE depositoId INT;
@@ -522,21 +592,6 @@ CREATE TRIGGER `stock_insert_detallecompra_insert` AFTER INSERT ON `detallecompr
     	ultimaCompra = fechaCompra
     	WHERE codBarra = NEW.codBarra AND idDeposito = depositoId;
     END IF;
-END
-$$
-DELIMITER ;
-DELIMITER $$
-CREATE TRIGGER `stock_update_detallecompra_delete` AFTER DELETE ON `detallecompra` FOR EACH ROW BEGIN  
-	DECLARE depositoId INT;
-
-	SELECT idDeposito
-	INTO depositoId
-	FROM compras 
-	WHERE idCompra = OLD.idCompra;
-    
-    UPDATE stock SET 
-    stockActual = stockActual - OLD.cantidad
-    WHERE codBarra = OLD.codBarra AND idDeposito = depositoId;
 END
 $$
 DELIMITER ;
@@ -574,13 +629,6 @@ CREATE TABLE `detallespagos` (
   `importe` float(16,2) NOT NULL,
   `cuota` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `detallespagos`
---
-
-INSERT INTO `detallespagos` (`idDetallePago`, `idPago`, `idCuentaPagar`, `importe`, `cuota`) VALUES
-(1, 1, 1, 11250.00, 1);
 
 --
 -- Disparadores `detallespagos`
@@ -623,7 +671,9 @@ CREATE TABLE `detalleventa` (
 --
 
 INSERT INTO `detalleventa` (`idDetalleVenta`, `idVenta`, `codBarra`, `descripcion`, `precioBruto`, `precioNeto`, `cantidad`, `descuento`, `bonificacion`, `impuesto`, `total`) VALUES
-(1, 1, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 150000, 272727.28, 2, 0, 0, 27272.719999999972, 300000);
+(1, 1, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 150000, 681818.2000000001, 5, 0, 0, 68181.79999999993, 750000),
+(1, 2, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 150000, 272727.28, 2, 0, 0, 27272.719999999972, 300000),
+(1, 3, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 150000, 272727.28, 2, 0, 0, 27272.719999999972, 300000);
 
 --
 -- Disparadores `detalleventa`
@@ -742,14 +792,31 @@ CREATE TRIGGER `anular_venta` AFTER INSERT ON `facturasanuladas` FOR EACH ROW BE
     DECLARE depositoId INT;
     DECLARE cantidad INT;
     DECLARE codBarra VARCHAR(75);
+    DECLARE id_cobro INT;
+    DECLARE idCtaCobrar INT;
     DECLARE cur CURSOR FOR SELECT codbarra, cantidad FROM detalleventa WHERE idVenta = NEW.idVenta;
     
 	UPDATE ventas SET anulado = 1 
 	WHERE idVenta = NEW.idVenta;
+    
+    SELECT idCuentaCobrar
+    INTO idCtaCobrar
+    FROM cuentascobrar
+    WHERE tabla_id = NEW.idVenta AND nombre_tabla = 'ventas';
+    
+    SELECT idCobro
+    INTO id_cobro
+    FROM detallecobro
+    WHERE idCuentaCobrar = idCtaCobrar;
 
 	DELETE FROM cuentascobrar
-    WHERE nombre_tabla = 'ventas'
-    AND tabla_id = NEW.idVenta;
+    WHERE id = idCtaCobrar;
+    
+    DELETE FROM detallecobro
+    WHERE idCuentaCobrar = idCtaCobrar;
+    
+    DELETE FROM cobros
+    WHERE idCobro = id_cobro;
     
     SELECT totalFactura, idCliente
     INTO total, idCliente
@@ -1131,70 +1198,67 @@ CREATE TABLE `menus` (
 INSERT INTO `menus` (`id`, `nombre`, `menu`, `subMenu`, `item`, `subItem`, `idCategoria`, `ver`, `guardar`, `eliminar`, `activo`) VALUES
 (1, 'Archivo', 1, 0, 0, 0, 0, 1, 0, 0, 1),
 (2, 'Guardar', 0, 1, 0, 0, 1, 1, 0, 0, 1),
-(3, 'Salir', 0, 1, 0, 0, 1, 1, 0, 0, 1),
-(4, 'Editar', 1, 0, 0, 0, 0, 1, 0, 0, 1),
-(5, 'Buscar', 0, 1, 0, 0, 4, 1, 0, 0, 1),
-(6, 'Eliminar', 0, 1, 0, 0, 4, 1, 0, 0, 1),
-(7, 'Nuevo', 0, 1, 0, 0, 4, 1, 0, 0, 1),
-(8, 'Insertar Detalle', 0, 1, 0, 0, 4, 1, 0, 0, 1),
-(9, 'Eliminar Detalle', 0, 1, 0, 0, 4, 1, 0, 0, 1),
-(10, 'Stock', 1, 0, 0, 0, 0, 1, 0, 0, 1),
-(11, 'Datos Primarios', 0, 1, 0, 0, 10, 1, 0, 0, 1),
-(12, 'Color', 0, 0, 1, 0, 11, 1, 1, 1, 1),
-(13, 'Tamaño', 0, 0, 1, 0, 11, 1, 1, 1, 1),
-(14, 'Diseño', 0, 0, 1, 0, 11, 1, 1, 1, 1),
-(15, 'Marca', 0, 0, 1, 0, 11, 1, 1, 1, 1),
-(16, 'Categoria Producto', 0, 0, 1, 0, 11, 1, 1, 1, 1),
-(17, 'Sub Categoría Producto', 0, 0, 1, 0, 11, 1, 1, 1, 1),
-(18, 'Ubicación de Producto', 0, 0, 1, 0, 11, 1, 1, 1, 1),
-(19, 'Unidad de Medida', 0, 0, 1, 0, 11, 1, 1, 1, 1),
-(20, 'Producto', 0, 0, 1, 0, 11, 1, 1, 1, 1),
-(21, 'Ajuste de Stock', 0, 1, 0, 0, 10, 1, 1, 1, 1),
-(22, 'Pedido Transferencia', 0, 1, 0, 0, 10, 1, 1, 1, 1),
-(23, 'Transferir Pedido', 0, 1, 0, 0, 10, 1, 1, 1, 1),
-(24, 'Aprobar Transferencia', 0, 1, 0, 0, 10, 1, 1, 1, 1),
-(25, 'Fraccionar Producto', 0, 1, 0, 0, 10, 1, 1, 1, 1),
-(26, 'Inventario', 0, 1, 0, 0, 10, 1, 1, 1, 1),
-(27, 'Informes', 0, 1, 0, 0, 10, 1, 0, 0, 1),
-(28, 'Fichas', 1, 0, 0, 0, 0, 1, 0, 0, 1),
-(29, 'Personas', 0, 1, 0, 0, 28, 1, 1, 1, 1),
-(30, 'Empleado', 0, 1, 0, 0, 28, 1, 1, 1, 1),
-(31, 'Depósitos', 0, 1, 0, 0, 28, 1, 1, 1, 1),
-(32, 'Sucursales', 0, 1, 0, 0, 28, 1, 1, 1, 1),
-(33, 'Empresa', 0, 1, 0, 0, 28, 1, 1, 1, 1),
-(34, 'Departamentos', 0, 1, 0, 0, 28, 1, 1, 1, 1),
-(35, 'Ciudades', 0, 1, 0, 0, 28, 1, 1, 1, 1),
-(36, 'Monedas', 0, 1, 0, 0, 28, 1, 1, 1, 1),
-(37, 'Plazos', 0, 1, 0, 0, 28, 1, 1, 1, 1),
-(38, 'Comprobantes', 0, 1, 0, 0, 28, 1, 0, 0, 1),
-(39, 'Tipo de Comprobantes', 0, 0, 1, 0, 38, 1, 1, 1, 1),
-(40, 'Talonarios', 0, 0, 1, 0, 38, 1, 1, 1, 1),
-(41, 'Seguridad', 1, 0, 0, 0, 0, 1, 0, 0, 1),
-(42, 'Usuarios', 0, 1, 0, 0, 41, 1, 1, 1, 1),
-(43, 'Roles', 0, 1, 0, 0, 41, 1, 1, 1, 1),
-(44, 'Permisos', 0, 1, 0, 0, 41, 1, 1, 1, 1),
-(45, 'Menús', 0, 1, 0, 0, 41, 1, 1, 1, 1),
-(46, 'Tesorería', 1, 0, 0, 0, 0, 1, 0, 0, 1),
-(47, 'Caja', 0, 1, 0, 0, 46, 1, 0, 0, 1),
-(48, 'Arqueos', 0, 0, 1, 0, 47, 1, 1, 1, 1),
-(49, 'Planillas', 0, 0, 1, 0, 47, 1, 1, 1, 1),
-(50, 'Pagos', 0, 1, 0, 0, 46, 1, 1, 1, 1),
-(51, 'Cobros', 0, 1, 0, 0, 46, 1, 0, 0, 1),
-(52, 'Cobro', 0, 0, 1, 0, 51, 1, 1, 1, 1),
-(53, 'Generar recibo', 0, 0, 1, 0, 51, 1, 0, 0, 1),
-(54, 'Ventas', 1, 0, 0, 0, 0, 1, 0, 0, 1),
-(55, 'Clientes', 0, 1, 0, 0, 54, 1, 1, 1, 1),
-(56, 'Facturacion', 0, 1, 0, 0, 54, 1, 0, 0, 1),
-(57, 'Generar Factura', 0, 0, 1, 0, 56, 1, 0, 0, 1),
-(58, 'Anular Factura', 0, 0, 1, 0, 56, 1, 1, 1, 1),
-(59, 'Tipo Cliente', 0, 1, 0, 0, 54, 1, 1, 1, 1),
-(60, 'Venta', 0, 1, 0, 0, 54, 1, 1, 1, 1),
-(61, 'Compras', 1, 0, 0, 0, 0, 1, 0, 0, 1),
-(62, 'Proveedores', 0, 1, 0, 0, 61, 1, 1, 1, 1),
-(63, 'Compra', 0, 1, 0, 0, 61, 1, 1, 1, 1),
-(64, 'Ayuda', 1, 0, 0, 0, 0, 1, 0, 0, 1),
-(65, 'Guia', 0, 1, 0, 0, 64, 1, 0, 0, 1),
-(66, 'Acerca De', 0, 1, 0, 0, 64, 1, 0, 0, 1);
+(3, 'Cerrar Sesión', 0, 1, 0, 0, 1, 1, 0, 0, 1),
+(4, 'Salir', 0, 1, 0, 0, 1, 1, 0, 0, 1),
+(5, 'Editar', 1, 0, 0, 0, 0, 1, 0, 0, 1),
+(6, 'Primero', 0, 1, 0, 0, 5, 1, 0, 0, 1),
+(7, 'Siguiente', 0, 1, 0, 0, 5, 1, 0, 0, 1),
+(8, 'Anterior', 0, 1, 0, 0, 5, 1, 0, 0, 1),
+(9, 'Ultimo', 0, 1, 0, 0, 5, 1, 0, 0, 1),
+(10, 'Buscar', 0, 1, 0, 0, 5, 1, 0, 0, 1),
+(11, 'Eliminar', 0, 1, 0, 0, 5, 1, 0, 0, 1),
+(12, 'Nuevo', 0, 1, 0, 0, 5, 1, 0, 0, 1),
+(13, 'Insertar Detalle', 0, 1, 0, 0, 5, 1, 0, 0, 1),
+(14, 'Eliminar Detalle', 0, 1, 0, 0, 5, 1, 0, 0, 1),
+(15, 'Stock', 1, 0, 0, 0, 0, 1, 0, 0, 1),
+(16, 'Datos Primarios', 0, 1, 0, 0, 15, 1, 0, 0, 1),
+(17, 'Color', 0, 0, 1, 0, 16, 1, 1, 1, 1),
+(18, 'Tamaño', 0, 0, 1, 0, 16, 1, 1, 1, 1),
+(19, 'Diseño', 0, 0, 1, 0, 16, 1, 1, 1, 1),
+(20, 'Marca', 0, 0, 1, 0, 16, 1, 1, 1, 1),
+(21, 'Categoria Producto', 0, 0, 1, 0, 16, 1, 1, 1, 1),
+(22, 'Producto', 0, 0, 1, 0, 16, 1, 1, 1, 1),
+(23, 'Ajuste de Stock', 0, 1, 0, 0, 15, 1, 1, 1, 1),
+(24, 'Informes', 0, 1, 0, 0, 15, 1, 0, 0, 1),
+(25, 'Lista de Productos', 0, 0, 1, 0, 24, 1, 0, 0, 1),
+(26, 'Seguimiento de Productos', 0, 0, 1, 0, 24, 1, 0, 0, 1),
+(27, 'Fichas', 1, 0, 0, 0, 0, 1, 0, 0, 1),
+(28, 'Personas', 0, 1, 0, 0, 27, 1, 1, 1, 1),
+(29, 'Empleado', 0, 1, 0, 0, 27, 1, 1, 1, 1),
+(30, 'Depósitos', 0, 1, 0, 0, 27, 1, 1, 1, 1),
+(31, 'Sucursales', 0, 1, 0, 0, 27, 1, 1, 1, 1),
+(32, 'Empresa', 0, 1, 0, 0, 27, 1, 1, 0, 1),
+(33, 'Departamentos', 0, 1, 0, 0, 27, 1, 1, 1, 1),
+(34, 'Ciudades', 0, 1, 0, 0, 27, 1, 1, 1, 1),
+(35, 'Plazos', 0, 1, 0, 0, 27, 1, 1, 1, 1),
+(36, 'Comprobantes', 0, 1, 0, 0, 27, 1, 0, 0, 1),
+(37, 'Tipo de Comprobantes', 0, 0, 1, 0, 36, 1, 1, 1, 1),
+(38, 'Talonarios', 0, 0, 1, 0, 36, 1, 1, 1, 1),
+(39, 'Seguridad', 1, 0, 0, 0, 0, 1, 0, 0, 1),
+(40, 'Usuarios', 0, 1, 0, 0, 39, 1, 1, 1, 1),
+(41, 'Roles', 0, 1, 0, 0, 39, 1, 1, 1, 1),
+(42, 'Permisos', 0, 1, 0, 0, 39, 1, 1, 1, 1),
+(43, 'Menús', 0, 1, 0, 0, 39, 1, 1, 1, 1),
+(44, 'Tesorería', 1, 0, 0, 0, 0, 1, 0, 0, 1),
+(45, 'Caja', 0, 1, 0, 0, 44, 1, 0, 0, 1),
+(46, 'Arqueos', 0, 0, 1, 0, 45, 1, 1, 1, 1),
+(47, 'Planillas', 0, 0, 1, 0, 45, 1, 1, 1, 1),
+(48, 'Pagos', 0, 1, 0, 0, 44, 1, 1, 1, 1),
+(49, 'Cobros', 0, 1, 0, 0, 44, 1, 0, 0, 1),
+(50, 'Cobro', 0, 0, 1, 0, 49, 1, 1, 1, 1),
+(51, 'Generar recibo', 0, 0, 1, 0, 49, 1, 0, 0, 1),
+(52, 'Ventas', 1, 0, 0, 0, 0, 1, 0, 0, 1),
+(53, 'Clientes', 0, 1, 0, 0, 52, 1, 1, 1, 1),
+(54, 'Facturacion', 0, 1, 0, 0, 52, 1, 0, 0, 1),
+(55, 'Generar Factura', 0, 0, 1, 0, 54, 1, 0, 0, 1),
+(56, 'Anular Factura', 0, 0, 1, 0, 54, 1, 1, 0, 1),
+(57, 'Tipo Cliente', 0, 1, 0, 0, 52, 1, 1, 1, 1),
+(58, 'Venta', 0, 1, 0, 0, 52, 1, 1, 0, 1),
+(59, 'Informes', 0, 1, 0, 0, 52, 1, 0, 0, 1),
+(60, 'Compras', 1, 0, 0, 0, 0, 1, 0, 0, 1),
+(61, 'Proveedores', 0, 1, 0, 0, 60, 1, 1, 1, 1),
+(62, 'Compra', 0, 1, 0, 0, 60, 1, 1, 1, 1),
+(63, 'Informes', 0, 1, 0, 0, 60, 1, 0, 0, 1);
 
 -- --------------------------------------------------------
 
@@ -1231,13 +1295,6 @@ CREATE TABLE `pagos` (
   `totalPago` float(16,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Volcado de datos para la tabla `pagos`
---
-
-INSERT INTO `pagos` (`id`, `idProveedor`, `fecha`, `nroRecibo`, `totalPago`) VALUES
-(1, 1, 1679889600, 616165165, 11250.00);
-
 -- --------------------------------------------------------
 
 --
@@ -1252,78 +1309,6 @@ CREATE TABLE `permisos` (
   `guardar` int(11) NOT NULL DEFAULT 1,
   `eliminar` int(11) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `permisos`
---
-
-INSERT INTO `permisos` (`id`, `idRol`, `idMenu`, `ver`, `guardar`, `eliminar`) VALUES
-(1, 2, 1, 1, 0, 0),
-(2, 2, 2, 1, 0, 0),
-(3, 2, 3, 1, 0, 0),
-(4, 2, 4, 1, 0, 0),
-(5, 2, 5, 1, 0, 0),
-(6, 2, 6, 1, 0, 0),
-(7, 2, 7, 1, 0, 0),
-(8, 2, 8, 1, 0, 0),
-(9, 2, 9, 1, 0, 0),
-(10, 2, 10, 1, 0, 0),
-(11, 2, 11, 1, 0, 0),
-(12, 2, 12, 1, 0, 0),
-(13, 2, 13, 1, 0, 0),
-(14, 2, 14, 1, 0, 0),
-(15, 2, 15, 1, 0, 0),
-(16, 2, 16, 1, 0, 0),
-(17, 2, 17, 1, 0, 0),
-(18, 2, 18, 1, 0, 0),
-(19, 2, 19, 1, 0, 0),
-(20, 2, 20, 1, 0, 0),
-(21, 2, 21, 1, 0, 0),
-(22, 2, 22, 1, 0, 0),
-(23, 2, 23, 1, 0, 0),
-(24, 2, 24, 1, 0, 0),
-(25, 2, 25, 1, 0, 0),
-(26, 2, 26, 1, 0, 0),
-(27, 2, 27, 1, 0, 0),
-(28, 2, 28, 1, 0, 0),
-(29, 2, 29, 1, 0, 0),
-(30, 2, 30, 1, 0, 0),
-(31, 2, 31, 1, 0, 0),
-(32, 2, 32, 1, 0, 0),
-(33, 2, 33, 1, 0, 0),
-(34, 2, 34, 1, 0, 0),
-(35, 2, 35, 1, 0, 0),
-(36, 2, 36, 1, 0, 0),
-(37, 2, 37, 1, 0, 0),
-(38, 2, 38, 1, 0, 0),
-(39, 2, 39, 1, 0, 0),
-(40, 2, 40, 1, 0, 0),
-(41, 2, 41, 0, 0, 0),
-(42, 2, 42, 0, 0, 0),
-(43, 2, 43, 0, 0, 0),
-(44, 2, 44, 0, 0, 0),
-(45, 2, 45, 0, 0, 0),
-(46, 2, 46, 0, 0, 0),
-(47, 2, 47, 0, 0, 0),
-(48, 2, 48, 0, 0, 0),
-(49, 2, 49, 0, 0, 0),
-(50, 2, 50, 0, 0, 0),
-(51, 2, 51, 0, 0, 0),
-(52, 2, 52, 0, 0, 0),
-(53, 2, 53, 0, 0, 0),
-(54, 2, 54, 0, 0, 0),
-(55, 2, 55, 0, 0, 0),
-(56, 2, 56, 0, 0, 0),
-(57, 2, 57, 0, 0, 0),
-(58, 2, 58, 0, 0, 0),
-(59, 2, 59, 0, 0, 0),
-(60, 2, 60, 0, 0, 0),
-(61, 2, 61, 0, 0, 0),
-(62, 2, 62, 0, 0, 0),
-(63, 2, 63, 0, 0, 0),
-(64, 2, 64, 0, 0, 0),
-(65, 2, 65, 0, 0, 0),
-(66, 2, 66, 0, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -1547,7 +1532,7 @@ CREATE TABLE `stock` (
 --
 
 INSERT INTO `stock` (`codBarra`, `idDeposito`, `stockActual`, `ultimaCompra`) VALUES
-('123456', 1, 21, 1679889600);
+('123456', 1, 19, 1681444800);
 
 -- --------------------------------------------------------
 
@@ -1598,8 +1583,8 @@ CREATE TABLE `talonarios` (
 --
 
 INSERT INTO `talonarios` (`idTalonario`, `idTipoComprobante`, `timbrado`, `inicioVigencia`, `finVigencia`, `serie`, `nroInicio`, `nroFin`, `activo`, `idUsuario`, `disponible`, `utilizado`) VALUES
-(1, 1, '123456-7', '2022-11-01', '2022-11-30', '001-001-', 1, 100, 1, 1, 99, 1),
-(2, 2, NULL, NULL, NULL, NULL, 1, 100, 1, 1, 100, 0);
+(1, 1, '123456-7', '2022-11-01', '2022-11-30', '001-001-', 1, 100, 1, 1, 97, 3),
+(2, 2, NULL, NULL, NULL, NULL, 1, 100, 1, 1, 98, 2);
 
 -- --------------------------------------------------------
 
@@ -1684,7 +1669,7 @@ CREATE TABLE `usuarios` (
 
 INSERT INTO `usuarios` (`id_usuario`, `usuario`, `contrasena`, `activo`, `idRol`, `idEmpleado`) VALUES
 (1, 'user', 'e1dc99ba9abbe6e07f288e', 1, 1, 1),
-(2, 'JorgeX', '8ee4d9b56979b86e28d3f2c7', 1, 2, 2);
+(2, 'JorgeX', 'e1dc99ba9abbe6e07f288e', 1, 2, 2);
 
 -- --------------------------------------------------------
 
@@ -1725,7 +1710,9 @@ CREATE TABLE `ventas` (
 --
 
 INSERT INTO `ventas` (`idVenta`, `fechaProceso`, `fechaFactura`, `serie`, `timbrado`, `vencimiento`, `nroDocumento`, `idCliente`, `idCondicion`, `idFormaPago`, `idDeposito`, `idTipoComprobante`, `idPlazo`, `idMoneda`, `idUsuario`, `idPrecio`, `pagoInicial`, `totalExento`, `totalNeto`, `totalImpuesto`, `totalBruto`, `totalFactura`, `vencimientoFactura`, `impreso`, `anulado`) VALUES
-(1, 1679889600, 1679889600, '001-001-', '123456-7', '2022-11-30', 1, 1, 2, 1, 1, 1, 2, 1, 1, 1, 0, 0, 272727.28, 27272.72, 272727.28, 300000, 0, 1, 0);
+(1, 1681358400, 1681358400, '001-001-', '123456-7', '2022-11-30', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 681818.2, 68181.8, 681818.2, 750000, 0, 1, 0),
+(2, 1681358400, 1681358400, '001-001-', '123456-7', '2022-11-30', 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 272727.28, 27272.72, 272727.28, 300000, 0, 0, 0),
+(3, 1681444800, 1681444800, '001-001-', '123456-7', '2022-11-30', 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 272727.28, 27272.72, 272727.28, 300000, 0, 1, 0);
 
 --
 -- Disparadores `ventas`
@@ -1826,6 +1813,18 @@ DELIMITER ;
 --
 -- Índices para tablas volcadas
 --
+
+--
+-- Indices de la tabla `ajustedetalle`
+--
+ALTER TABLE `ajustedetalle`
+  ADD PRIMARY KEY (`idajustedetalle`,`idajustes`);
+
+--
+-- Indices de la tabla `ajustestock`
+--
+ALTER TABLE `ajustestock`
+  ADD PRIMARY KEY (`idajustes`);
 
 --
 -- Indices de la tabla `arqueocajas`
