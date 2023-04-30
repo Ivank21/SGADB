@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.0
+-- version 5.1.1
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 14-04-2023 a las 22:50:30
--- Versión del servidor: 10.4.27-MariaDB
--- Versión de PHP: 8.0.25
+-- Tiempo de generación: 30-04-2023 a las 16:54:12
+-- Versión del servidor: 10.4.22-MariaDB
+-- Versión de PHP: 7.4.27
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -33,7 +33,14 @@ CREATE TABLE `ajustedetalle` (
   `can_ajustes` int(11) NOT NULL,
   `idajustedetalle` int(11) NOT NULL,
   `idajustes` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `ajustedetalle`
+--
+
+INSERT INTO `ajustedetalle` (`codBarra`, `can_actual`, `can_ajustes`, `idajustedetalle`, `idajustes`) VALUES
+('123456', 21, 4, 1, 1);
 
 --
 -- Disparadores `ajustedetalle`
@@ -48,7 +55,7 @@ CREATE TRIGGER `stock_update_ajustestock_delete` AFTER DELETE ON `ajustedetalle`
     WHERE idajustes = OLD.idajustes;
     
     UPDATE stock 
-    SET stockActual = OLD.can_actual
+    SET stockActual = stockActual -OLD.can_ajustes
     WHERE codBarra = OLD.codBarra AND idDeposito = depositoId;
 END
 $$
@@ -63,7 +70,7 @@ CREATE TRIGGER `stock_update_ajustestock_insert` AFTER INSERT ON `ajustedetalle`
     WHERE idajustes = NEW.idajustes;
     
     UPDATE stock 
-    SET stockActual = NEW.can_ajustes
+    SET stockActual = stockActual + NEW.can_ajustes
     WHERE codBarra = NEW.codBarra AND idDeposito = depositoId;
 END
 $$
@@ -82,7 +89,61 @@ CREATE TABLE `ajustestock` (
   `aprovado` int(11) NOT NULL,
   `contabilizado` int(11) NOT NULL,
   `deposito` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `ajustestock`
+--
+
+INSERT INTO `ajustestock` (`idajustes`, `motivo`, `fechaajuste`, `aprovado`, `contabilizado`, `deposito`) VALUES
+(1, 'Prueba', 1682279040, 0, 0, 1);
+
+--
+-- Disparadores `ajustestock`
+--
+DELIMITER $$
+CREATE TRIGGER `ajustestock_delete` BEFORE DELETE ON `ajustestock` FOR EACH ROW DELETE FROM ajustedetalle WHERE idajustes = OLD.idajustes
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `ajustestock_update` BEFORE UPDATE ON `ajustestock` FOR EACH ROW DELETE FROM ajustedetalle WHERE idajustes = NEW.idajustes
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `aperturacajas`
+--
+
+CREATE TABLE `aperturacajas` (
+  `id` int(11) NOT NULL,
+  `fechaApertura` bigint(20) NOT NULL,
+  `fechaCierre` bigint(20) NOT NULL DEFAULT 0,
+  `montoApertura` double NOT NULL DEFAULT 0,
+  `montoInicial` double NOT NULL,
+  `montoFinal` double NOT NULL DEFAULT 0,
+  `montoRetirado` double NOT NULL DEFAULT 0,
+  `idUsuario` int(11) NOT NULL,
+  `idCaja` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `aperturacajas`
+--
+
+INSERT INTO `aperturacajas` (`id`, `fechaApertura`, `fechaCierre`, `montoApertura`, `montoInicial`, `montoFinal`, `montoRetirado`, `idUsuario`, `idCaja`) VALUES
+(1, 1682027220, 1682109780, 1000000, 2000000, 1780000, 0, 1, 1),
+(2, 1682111940, 1682122140, 0, 1780000, 0, 0, 1, 1),
+(3, 1682122440, 0, 1000000, 1000000, 0, 0, 1, 1);
+
+--
+-- Disparadores `aperturacajas`
+--
+DELIMITER $$
+CREATE TRIGGER `delete_arqueocajas` BEFORE DELETE ON `aperturacajas` FOR EACH ROW DELETE FROM arqueocajas WHERE idApertura = OLD.id
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -91,10 +152,22 @@ CREATE TABLE `ajustestock` (
 --
 
 CREATE TABLE `arqueocajas` (
-  `id` int(11) NOT NULL,
-  `deduccion` varchar(255) NOT NULL,
-  `idCaja` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `idArqueo` int(11) NOT NULL,
+  `idApertura` int(11) NOT NULL,
+  `totalVentas` double NOT NULL,
+  `totalCompras` double NOT NULL,
+  `totalPagos` double NOT NULL,
+  `totalCobros` double NOT NULL,
+  `totalArqueo` double NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `arqueocajas`
+--
+
+INSERT INTO `arqueocajas` (`idArqueo`, `idApertura`, `totalVentas`, `totalCompras`, `totalPagos`, `totalCobros`, `totalArqueo`) VALUES
+(1, 1, 0, 200000, 0, 20000, 1780000),
+(2, 2, 55000, 0, 25000, 0, 1860000);
 
 -- --------------------------------------------------------
 
@@ -108,7 +181,7 @@ CREATE TABLE `auditoria` (
   `tabla` varchar(50) NOT NULL,
   `proceso` varchar(50) NOT NULL,
   `fecha` date NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -118,11 +191,18 @@ CREATE TABLE `auditoria` (
 
 CREATE TABLE `cajas` (
   `id` int(11) NOT NULL,
-  `fecha` bigint(20) NOT NULL,
-  `montoInicio` double NOT NULL,
-  `montoFin` double NOT NULL,
-  `idUsuario` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `nombre` varchar(100) NOT NULL,
+  `activo` int(11) NOT NULL,
+  `saldoActual` double NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `cajas`
+--
+
+INSERT INTO `cajas` (`id`, `nombre`, `activo`, `saldoActual`) VALUES
+(1, 'Caja 1', 1, 0),
+(2, 'preuba', 1, 0);
 
 -- --------------------------------------------------------
 
@@ -134,7 +214,7 @@ CREATE TABLE `categoria` (
   `idCategoria` int(11) NOT NULL,
   `categoria` varchar(50) NOT NULL,
   `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `categoria`
@@ -144,9 +224,7 @@ INSERT INTO `categoria` (`idCategoria`, `categoria`, `activo`) VALUES
 (1, 'Plomeria', 1),
 (2, 'Electricidades', 1),
 (3, 'Ferreteria', 1),
-(4, 'Bulones', 1),
-(5, 'prueba', 0),
-(6, 'asdasda', 1);
+(4, 'Bulones', 1);
 
 -- --------------------------------------------------------
 
@@ -158,7 +236,7 @@ CREATE TABLE `categoriamenu` (
   `id` int(11) NOT NULL,
   `categoria` varchar(75) NOT NULL,
   `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -171,18 +249,18 @@ CREATE TABLE `clientes` (
   `ruc` varchar(50) NOT NULL,
   `idTipoCliente` int(11) NOT NULL,
   `idPersona` int(11) NOT NULL,
-  `limiteCredito` int(11) NOT NULL,
+  `limiteCredito` float(16,2) NOT NULL,
   `idMoneda` int(11) DEFAULT NULL,
   `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `clientes`
 --
 
 INSERT INTO `clientes` (`idCliente`, `ruc`, `idTipoCliente`, `idPersona`, `limiteCredito`, `idMoneda`, `activo`) VALUES
-(1, '123456-9', 1, 1, 350000, 1, 1),
-(2, '321456-9', 2, 2, 1688000, NULL, 1);
+(1, '123456-9', 1, 1, 480000.00, 1, 1),
+(2, '321456-9', 2, 2, 1688000.00, 1, 1);
 
 -- --------------------------------------------------------
 
@@ -196,16 +274,35 @@ CREATE TABLE `cobros` (
   `fecha` bigint(20) NOT NULL,
   `nroRecibo` int(11) NOT NULL,
   `totalCobro` float(16,2) NOT NULL,
-  `impreso` int(11) NOT NULL DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `impreso` int(11) NOT NULL DEFAULT 0,
+  `anulado` int(11) NOT NULL DEFAULT 0,
+  `idCaja` int(11) NOT NULL,
+  `idTalonario` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `cobros`
+--
+
+INSERT INTO `cobros` (`id`, `idCliente`, `fecha`, `nroRecibo`, `totalCobro`, `impreso`, `anulado`, `idCaja`, `idTalonario`) VALUES
+(1, 1, 1682121960, 1, 25000.00, 1, 1, 1, 2),
+(2, 1, 1682774820, 2, 25000.00, 1, 1, 1, 2);
 
 --
 -- Disparadores `cobros`
 --
 DELIMITER $$
-CREATE TRIGGER `update_cliente_credito` AFTER INSERT ON `cobros` FOR EACH ROW UPDATE clientes SET
+CREATE TRIGGER `cobros_insert` AFTER INSERT ON `cobros` FOR EACH ROW BEGIN
+UPDATE clientes SET
 limiteCredito = limiteCredito + NEW.totalCobro
-WHERE idCliente = NEW.idCliente
+WHERE idCliente = NEW.idCliente;
+
+UPDATE talonarios 
+SET 
+    disponible = disponible - 1,
+    utilizado = nroFin - disponible
+    WHERE idTalonario = NEW.idTalonario;
+END
 $$
 DELIMITER ;
 
@@ -219,7 +316,7 @@ CREATE TABLE `colores` (
   `idColor` int(11) NOT NULL,
   `color` varchar(50) NOT NULL,
   `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `colores`
@@ -227,12 +324,11 @@ CREATE TABLE `colores` (
 
 INSERT INTO `colores` (`idColor`, `color`, `activo`) VALUES
 (1, 'Rojo', 0),
-(2, 'AZUL', 1),
 (4, 'Violeta', 1),
 (5, 'Verde', 1),
 (7, 'Amarillo', 1),
 (8, 'Celeste', 1),
-(9, 'Morado', 0);
+(9, 'Pruebas', 1);
 
 -- --------------------------------------------------------
 
@@ -259,23 +355,53 @@ CREATE TABLE `compras` (
   `totalNeto` double NOT NULL,
   `totalImpuesto` double NOT NULL,
   `totalBruto` double NOT NULL,
-  `totalFactura` double NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `totalFactura` double NOT NULL,
+  `idCaja` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `compras`
 --
 
-INSERT INTO `compras` (`idCompra`, `fechaProceso`, `fechaLlegada`, `timbrado`, `vencimiento`, `nroFactura`, `idProveedor`, `idCondicion`, `idFormaPago`, `idDeposito`, `idPlazo`, `idMoneda`, `idUsuario`, `pagoInicial`, `totalExento`, `totalNeto`, `totalImpuesto`, `totalBruto`, `totalFactura`) VALUES
-(1, 1681185600, 1681185600, '123456-7', 1681185600, '001-001-000001', 1, 1, 1, 1, 3, 1, 1, 0, 0, 34091, 3409, 34091, 37500),
-(2, 1681272000, 1681272000, '123456-7', 1681272000, '001-001-000002', 1, 1, 1, 1, 1, 1, 1, 0, 0, 1363.64, 136.36, 1363.64, 1500),
-(3, 1681444800, 1681444800, '123456-7', 1681444800, '001-001-000003', 1, 1, 1, 1, 1, 1, 1, 0, 0, 2909.1, 290.9, 2909.1, 3200);
+INSERT INTO `compras` (`idCompra`, `fechaProceso`, `fechaLlegada`, `timbrado`, `vencimiento`, `nroFactura`, `idProveedor`, `idCondicion`, `idFormaPago`, `idDeposito`, `idPlazo`, `idMoneda`, `idUsuario`, `pagoInicial`, `totalExento`, `totalNeto`, `totalImpuesto`, `totalBruto`, `totalFactura`, `idCaja`) VALUES
+(1, 1682088300, 1682088300, '123456-7', 1682049600, '001-001-000001', 1, 1, 1, 1, 1, 1, 1, 0, 0, 163636.5, 16363.5, 163636.5, 180000, 1),
+(2, 1682100720, 1682100720, '123456-7', 1682827200, '001-001-000002', 1, 2, 1, 1, 2, 1, 1, 20000, 0, 54545.5, 5454.5, 54545.5, 60000, 1),
+(3, 1682122620, 1682122620, '123456-7', 1682049600, '001-001-000003', 1, 1, 1, 1, 1, 1, 1, 0, 0, 5454.55, 545.45, 5454.55, 6000, 1),
+(4, 1682173920, 1682173920, '123456-7', 1682136000, '001-001-000005', 1, 1, 1, 1, 1, 1, 1, 0, 0, 181818.2, 18181.8, 181818.2, 200000, 1);
 
 --
 -- Disparadores `compras`
 --
 DELIMITER $$
-CREATE TRIGGER `cuentas_pagar` AFTER INSERT ON `compras` FOR EACH ROW BEGIN
+CREATE TRIGGER `compra_delete` BEFORE DELETE ON `compras` FOR EACH ROW BEGIN
+    DECLARE id_pago INT;
+    DECLARE idCtaPagar INT; 
+    
+    DELETE FROM detallecompra WHERE idCompra = OLD.idCompra;
+    
+    SELECT id
+    INTO idCtaPagar
+    FROM cuentaspagar
+    WHERE tabla_id = OLD.idCompra AND nombre_tabla = 'compras';
+    
+    SELECT idPago
+    INTO id_pago
+    FROM detallespagos
+    WHERE idCuentaPagar = idCtaPagar;
+    
+    DELETE FROM cuentaspagar
+    WHERE id = idCtaPagar;
+    
+    DELETE FROM detallespagos
+    WHERE idCuentaPagar = idCtaPagar;
+    
+    DELETE FROM pagos
+    WHERE id = id_pago;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `compra_insert` AFTER INSERT ON `compras` FOR EACH ROW BEGIN
 	DECLARE cuotas INT;
     DECLARE irregular INT;
     DECLARE decimales INT;
@@ -346,6 +472,103 @@ IF(NEW.idCondicion = 2) THEN
 END
 $$
 DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `compra_update` AFTER UPDATE ON `compras` FOR EACH ROW BEGIN
+	DECLARE cuotas INT;
+    DECLARE irregular INT;
+    DECLARE decimales INT;
+    DECLARE cuotaactual INT;
+	DECLARE dias INT;     
+    DECLARE id_pago INT;
+    DECLARE idCtaPagar INT;
+    DECLARE importecuota FLOAT(18,2); 
+    DECLARE ultimacuota FLOAT(18,2);
+    DECLARE vence BIGINT; 
+	DECLARE msg VARCHAR(3000);    
+
+IF(NEW.idCondicion = 2) THEN
+	IF NEW.idDeposito = 0 THEN
+		SET msg = 'No se ha especificado deposito';
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = msg; 
+	END IF;
+    
+    SELECT DISTINCT IFNULL(id, 0)
+    INTO idCtaPagar
+    FROM cuentaspagar
+    WHERE tabla_id = NEW.idCompra AND nombre_tabla = 'compras';
+    
+    IF idCtaPagar > 0 THEN
+    	SELECT DISTINCT idPago
+    	INTO id_pago
+    	FROM detallespagos
+    	WHERE idCuentaPagar = idCtaPagar;
+    
+    	DELETE FROM detallespagos
+    	WHERE idCuentaPagar = idCtaPagar;
+    
+    	DELETE FROM pagos
+	    WHERE id = id_pago;
+    
+    	DELETE FROM cuentaspagar
+    	WHERE id = idCtaPagar;
+    END IF;
+    
+    DELETE FROM detallecompra WHERE idCompra = NEW.idCompra;
+    
+    SELECT IFNULL(p.cuotas, 1), IFNULL(p.irregular, 0)
+	INTO cuotas, irregular
+    FROM plazos p
+    WHERE p.idPlazo = NEW.idPlazo;
+    
+    SELECT IFNULL(m.decimales, 0) INTO decimales
+    FROM monedas m 
+    WHERE m.idMoneda = NEW.idMoneda;
+    
+     IF NEW.pagoInicial > 0 THEN
+		SET importecuota = ROUND(((NEW.totalFactura - NEW.pagoInicial) / cuotas), decimales);
+        SET ultimacuota = (NEW.totalFactura - NEW.pagoInicial) - (importecuota * (cuotas - 1));
+    ELSE
+    	SET importecuota = ROUND((NEW.totalFactura / cuotas), decimales);
+        SET ultimacuota = NEW.totalFactura - (importecuota * (cuotas - 1));
+    END IF;
+    
+	SET vence = 0;
+	SET idCtaPagar = 0;
+ 
+	SELECT IFNULL(MAX(id), 0) INTO idCtaPagar FROM cuentaspagar;
+
+	SET cuotaactual = 1;
+
+    WHILE cuotaactual <= cuotas DO
+		IF irregular > 0 THEN
+			SELECT pd.dias INTO dias 
+            FROM plazosdetalle pd 
+            WHERE pd.idPlazo = NEW.idPlazo
+            AND pd.cuota = cuotaactual;
+
+			SELECT UNIX_TIMESTAMP(DATE_ADD(FROM_UNIXTIME(NEW.fechaLlegada), INTERVAL dias DAY)) INTO vence;
+		ELSE 
+			SELECT UNIX_TIMESTAMP(DATE_ADD(FROM_UNIXTIME(NEW.fechaLlegada), INTERVAL cuotaactual MONTH)) INTO vence;
+		END IF;
+
+		IF (cuotaactual = cuotas) THEN
+			SET importecuota = ultimacuota;
+		END IF;
+        
+		BEGIN
+        	INSERT INTO cuentaspagar VALUES((idCtaPagar + 1), cuotaactual, importecuota, 0.0, vence, NEW.idCompra, 'compras');
+		END;
+        
+		SET cuotaactual = (cuotaactual + 1) ;
+	END WHILE;
+	
+    IF NEW.pagoInicial > 0 THEN
+		INSERT INTO cuentaspagar VALUES((idCtaPagar + 1), 0, 0.0, NEW.pagoInicial, vence, NEW.idCompra, 'compras');
+	END IF;
+    END IF;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -356,7 +579,7 @@ DELIMITER ;
 CREATE TABLE `condiciones` (
   `idCondicion` int(11) NOT NULL,
   `condicion` varchar(75) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `condiciones`
@@ -376,7 +599,7 @@ CREATE TABLE `cotizaciones` (
   `idCotizacion` int(11) NOT NULL,
   `nombre` varchar(45) NOT NULL,
   `idMoneda` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -392,7 +615,16 @@ CREATE TABLE `cuentascobrar` (
   `vence` bigint(20) NOT NULL,
   `tabla_id` int(11) NOT NULL,
   `nombre_tabla` varchar(75) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `cuentascobrar`
+--
+
+INSERT INTO `cuentascobrar` (`id`, `cuota`, `importe`, `pagado`, `vence`, `tabla_id`, `nombre_tabla`) VALUES
+(1, 0, 0.00, 10000.00, 1682380680, 2, 'ventas'),
+(1, 1, 25000.00, 0.00, 1682294280, 2, 'ventas'),
+(1, 2, 25000.00, 0.00, 1682380680, 2, 'ventas');
 
 -- --------------------------------------------------------
 
@@ -403,12 +635,21 @@ CREATE TABLE `cuentascobrar` (
 CREATE TABLE `cuentaspagar` (
   `id` int(11) NOT NULL,
   `cuota` int(11) NOT NULL,
-  `importe` int(11) NOT NULL,
+  `importe` float(16,2) NOT NULL,
   `pagado` float(16,2) NOT NULL,
   `vence` bigint(20) NOT NULL,
   `tabla_id` int(11) NOT NULL,
   `nombre_tabla` varchar(75) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `cuentaspagar`
+--
+
+INSERT INTO `cuentaspagar` (`id`, `cuota`, `importe`, `pagado`, `vence`, `tabla_id`, `nombre_tabla`) VALUES
+(1, 0, 0.00, 20000.00, 1682359920, 2, 'compras'),
+(1, 1, 20000.00, 20000.00, 1682273520, 2, 'compras'),
+(1, 2, 20000.00, 20000.00, 1682359920, 2, 'compras');
 
 -- --------------------------------------------------------
 
@@ -420,7 +661,7 @@ CREATE TABLE `departamentos` (
   `idDepartamento` int(11) NOT NULL,
   `departamento` varchar(75) NOT NULL,
   `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `departamentos`
@@ -443,9 +684,7 @@ INSERT INTO `departamentos` (`idDepartamento`, `departamento`, `activo`) VALUES
 (14, 'Canindeyú', 1),
 (15, 'Presidente Hayes', 1),
 (16, 'Boquerón', 1),
-(17, 'Alto Paraguay', 1),
-(18, 'asdasa', 1),
-(19, 'bfvdd', 1);
+(17, 'Alto Paraguay', 1);
 
 -- --------------------------------------------------------
 
@@ -458,16 +697,14 @@ CREATE TABLE `deposito` (
   `idSucursal` int(11) NOT NULL,
   `nombre` varchar(75) NOT NULL,
   `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `deposito`
 --
 
 INSERT INTO `deposito` (`idDeposito`, `idSucursal`, `nombre`, `activo`) VALUES
-(1, 1, 'Central', 1),
-(2, 2, 'zcdc', 0),
-(3, 3, 'Prueba200', 0);
+(1, 1, 'Central', 1);
 
 -- --------------------------------------------------------
 
@@ -481,7 +718,15 @@ CREATE TABLE `detallecobro` (
   `idCuentaCobrar` int(11) NOT NULL,
   `importe` float(16,2) NOT NULL,
   `cuota` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `detallecobro`
+--
+
+INSERT INTO `detallecobro` (`idDetalleCobro`, `idCobro`, `idCuentaCobrar`, `importe`, `cuota`) VALUES
+(1, 1, 1, 25000.00, 1),
+(1, 2, 1, 25000.00, 2);
 
 --
 -- Disparadores `detallecobro`
@@ -517,16 +762,17 @@ CREATE TABLE `detallecompra` (
   `bonificacion` double NOT NULL,
   `impuesto` double NOT NULL,
   `total` double NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `detallecompra`
 --
 
 INSERT INTO `detallecompra` (`idDetalleCompra`, `idCompra`, `codBarra`, `descripcion`, `precioBruto`, `precioNeto`, `cantidad`, `descuento`, `bonificacion`, `impuesto`, `total`) VALUES
-(1, 1, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 1500, 34091, 25, 0, 0, 3408.9999999999973, 37500),
-(1, 2, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 1500, 1363.64, 1, 0, 0, 136.3599999999999, 1500),
-(1, 3, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 1600, 2909.1, 2, 0, 0, 290.9000000000001, 3200);
+(1, 1, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 6000, 163636.5, 30, 0, 0, 16363.499999999995, 180000),
+(1, 2, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 6000, 54545.5, 10, 0, 0, 5454.499999999998, 60000),
+(1, 3, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 6000, 5454.55, 1, 0, 0, 545.4499999999998, 6000),
+(1, 4, '956327', 'prueba - Rojo - pequeño - Sin Marca - grande', 10000, 181818.2, 20, 0, 0, 18181.800000000003, 200000);
 
 --
 -- Disparadores `detallecompra`
@@ -534,28 +780,7 @@ INSERT INTO `detallecompra` (`idDetalleCompra`, `idCompra`, `codBarra`, `descrip
 DELIMITER $$
 CREATE TRIGGER `detallecompra_delete` AFTER DELETE ON `detallecompra` FOR EACH ROW BEGIN  
 	DECLARE depositoId INT;
-    DECLARE id_pago INT;
-    DECLARE idCtaPagar INT;
     
-    SELECT idCuentaPagar
-    INTO idCtaPagar
-    FROM cuentaspagar
-    WHERE tabla_id = OLD.idCompra AND nombre_tabla = 'compras';
-    
-    SELECT idPago
-    INTO id_pago
-    FROM detallespagos
-    WHERE idCuentaPagar = idCtaPagar;
-    
-    DELETE FROM cuentaspagar
-    WHERE id = idCtaPagar;
-    
-    DELETE FROM detallespagos
-    WHERE idCuentaPagar = idCtaPagar;
-    
-    DELETE FROM pagos
-    WHERE idPago = id_pago;
-
 	SELECT idDeposito
 	INTO depositoId
 	FROM compras 
@@ -607,14 +832,14 @@ CREATE TABLE `detalleprecio` (
   `idPrecio` int(11) NOT NULL,
   `codBarra` varchar(75) NOT NULL,
   `precio` double NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `detalleprecio`
 --
 
 INSERT INTO `detalleprecio` (`idPrecioDetalle`, `idPrecio`, `codBarra`, `precio`) VALUES
-(1, 1, '123456', 15000);
+(1, 1, '123456', 25000);
 
 -- --------------------------------------------------------
 
@@ -628,19 +853,27 @@ CREATE TABLE `detallespagos` (
   `idCuentaPagar` int(11) NOT NULL,
   `importe` float(16,2) NOT NULL,
   `cuota` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `detallespagos`
+--
+
+INSERT INTO `detallespagos` (`idDetallePago`, `idPago`, `idCuentaPagar`, `importe`, `cuota`) VALUES
+(1, 1, 1, 20000.00, 1),
+(2, 1, 1, 20000.00, 2);
 
 --
 -- Disparadores `detallespagos`
 --
 DELIMITER $$
-CREATE TRIGGER `delete_pago` AFTER DELETE ON `detallespagos` FOR EACH ROW UPDATE cuentaspagar
+CREATE TRIGGER `detallepagos_delete` AFTER DELETE ON `detallespagos` FOR EACH ROW UPDATE cuentaspagar
 SET pagado = 0
 WHERE id = OLD.idCuentaPagar AND cuota = OLD.cuota
 $$
 DELIMITER ;
 DELIMITER $$
-CREATE TRIGGER `update_cuenta_pagar` AFTER INSERT ON `detallespagos` FOR EACH ROW UPDATE cuentaspagar
+CREATE TRIGGER `detallepagos_insert` AFTER INSERT ON `detallespagos` FOR EACH ROW UPDATE cuentaspagar
 SET pagado = NEW.importe 
 WHERE id = NEW.idCuentaPagar AND cuota = NEW.cuota
 $$
@@ -664,16 +897,25 @@ CREATE TABLE `detalleventa` (
   `bonificacion` double NOT NULL,
   `impuesto` double NOT NULL,
   `total` double NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `detalleventa`
 --
 
 INSERT INTO `detalleventa` (`idDetalleVenta`, `idVenta`, `codBarra`, `descripcion`, `precioBruto`, `precioNeto`, `cantidad`, `descuento`, `bonificacion`, `impuesto`, `total`) VALUES
-(1, 1, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 150000, 681818.2000000001, 5, 0, 0, 68181.79999999993, 750000),
-(1, 2, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 150000, 272727.28, 2, 0, 0, 27272.719999999972, 300000),
-(1, 3, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 150000, 272727.28, 2, 0, 0, 27272.719999999972, 300000);
+(1, 1, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 15000, 13636.36, 1, 0, 0, 1363.6399999999994, 15000),
+(1, 2, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 15000, 54545.44, 4, 0, 0, 5454.559999999998, 60000),
+(1, 3, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 15000, 27272.72, 2, 0, 0, 2727.279999999999, 30000),
+(1, 4, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 15000, 13636.36, 1, 0, 0, 1363.6399999999994, 15000),
+(1, 5, '956327', 'prueba - Rojo - pequeño - Sin Marca - grande', 10000, 9090.91, 1, 0, 0, 909.0900000000001, 10000),
+(1, 6, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 15000, 27272.72, 2, 0, 0, 2727.279999999999, 30000),
+(1, 7, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 15000, 54545.44, 4, 0, 0, 5454.559999999998, 60000),
+(1, 8, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 25000, 22727.27, 1, 0, 0, 2272.7299999999996, 25000),
+(2, 4, '956327', 'prueba - Rojo - pequeño - Sin Marca - grande', 10000, 9090.91, 1, 0, 0, 909.0900000000001, 10000),
+(2, 5, '123456', 'Caño - Rojo - pequeño - Tramontina - grande', 15000, 13636.36, 1, 0, 0, 1363.6399999999994, 15000),
+(2, 6, '956327', 'prueba - Rojo - pequeño - Sin Marca - grande', 10000, 27272.73, 3, 0, 0, 2727.2700000000004, 30000),
+(2, 7, '956327', 'prueba - Rojo - pequeño - Sin Marca - grande', 10000, 9090.91, 1, 0, 0, 909.0900000000001, 10000);
 
 --
 -- Disparadores `detalleventa`
@@ -709,7 +951,7 @@ CREATE TABLE `diseño` (
   `idDiseño` int(11) NOT NULL,
   `diseño` varchar(50) NOT NULL,
   `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `diseño`
@@ -718,7 +960,7 @@ CREATE TABLE `diseño` (
 INSERT INTO `diseño` (`idDiseño`, `diseño`, `activo`) VALUES
 (1, 'pequeño', 1),
 (2, 'grande', 1),
-(3, 'prueba', 0);
+(4, 'prueba2', 1);
 
 -- --------------------------------------------------------
 
@@ -731,18 +973,18 @@ CREATE TABLE `empleados` (
   `idPersona` int(11) NOT NULL,
   `puesto` varchar(75) NOT NULL,
   `salario` int(11) NOT NULL,
-  `FechaIngreso` date NOT NULL,
-  `FechaSalida` date DEFAULT NULL,
+  `FechaIngreso` bigint(20) NOT NULL,
+  `FechaSalida` bigint(20) NOT NULL,
   `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `empleados`
 --
 
 INSERT INTO `empleados` (`idEmpleado`, `idPersona`, `puesto`, `salario`, `FechaIngreso`, `FechaSalida`, `activo`) VALUES
-(1, 1, 'Cajero', 3000000, '2022-10-30', '2022-11-26', 1),
-(2, 2, 'Cajero', 1500000, '2022-10-13', NULL, 1);
+(1, 1, 'Cajero', 3000000, 20221030, 20221126, 1),
+(2, 2, 'Cajero', 1500000, 20221013, 0, 1);
 
 -- --------------------------------------------------------
 
@@ -758,7 +1000,7 @@ CREATE TABLE `empresa` (
   `direccion` varchar(255) NOT NULL,
   `idLocalidad` int(11) NOT NULL,
   `ruc` varchar(75) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `empresa`
@@ -780,66 +1022,62 @@ CREATE TABLE `facturasanuladas` (
   `nroFactura` varchar(75) NOT NULL,
   `motivo` varchar(255) NOT NULL,
   `fechaOperacion` bigint(20) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `facturasanuladas`
+--
+
+INSERT INTO `facturasanuladas` (`id`, `idCliente`, `idVenta`, `nroFactura`, `motivo`, `fechaOperacion`) VALUES
+(1, 1, 1, '001-001-000001', 'Esto es una prueba', 1682173080),
+(2, 1, 4, '001-001-000004', '', 1682183640),
+(3, 1, 5, '001-001-000005', 'hvhjgv', 1682185620),
+(4, 1, 6, '001-001-000006', 'Prueba', 1682200020),
+(5, 1, 7, '001-001-000007', 'Prueba 2', 1682200080);
 
 --
 -- Disparadores `facturasanuladas`
 --
 DELIMITER $$
-CREATE TRIGGER `anular_venta` AFTER INSERT ON `facturasanuladas` FOR EACH ROW BEGIN 
+CREATE TRIGGER `facturasanuladas_insert` AFTER INSERT ON `facturasanuladas` FOR EACH ROW BEGIN 
 	DECLARE total INT;
-    DECLARE idCliente INT;
-    DECLARE depositoId INT;
-    DECLARE cantidad INT;
-    DECLARE codBarra VARCHAR(75);
+    DECLARE pagoI INT;
+    DECLARE id_cliente INT;
     DECLARE id_cobro INT;
     DECLARE idCtaCobrar INT;
-    DECLARE cur CURSOR FOR SELECT codbarra, cantidad FROM detalleventa WHERE idVenta = NEW.idVenta;
     
-	UPDATE ventas SET anulado = 1 
-	WHERE idVenta = NEW.idVenta;
-    
-    SELECT idCuentaCobrar
+    SELECT DISTINCT IFNULL(id, 0)
     INTO idCtaCobrar
     FROM cuentascobrar
     WHERE tabla_id = NEW.idVenta AND nombre_tabla = 'ventas';
     
-    SELECT idCobro
-    INTO id_cobro
-    FROM detallecobro
-    WHERE idCuentaCobrar = idCtaCobrar;
-
-	DELETE FROM cuentascobrar
-    WHERE id = idCtaCobrar;
-    
-    DELETE FROM detallecobro
-    WHERE idCuentaCobrar = idCtaCobrar;
-    
-    DELETE FROM cobros
-    WHERE idCobro = id_cobro;
-    
-    SELECT totalFactura, idCliente
-    INTO total, idCliente
-    FROM ventas 	
-    WHERE idVenta = NEW.idVenta;
-    
-    UPDATE clientes 
-    SET limiteCredito = limiteCredito + totalFactura
-    WHERE idCliente = idCliente;
-
-	SELECT idDeposito
-	INTO depositoId
-	FROM ventas
+	UPDATE ventas SET anulado = 1 
 	WHERE idVenta = NEW.idVenta;
     
-    OPEN cur;
-    	read_loop: LOOP
-            FETCH cur INTO codBarra, cantidad;
-    			UPDATE stock SET 
-    			stockActual = stockActual + cantidad
-    			WHERE codBarra = codBarra AND idDeposito = depositoId;
-        END LOOP;
-    CLOSE cur;    
+    IF(idCtaCobrar > 0) THEN
+    	SELECT idCobro
+    	INTO id_cobro
+    	FROM detallecobro
+    	WHERE idCuentaCobrar = idCtaCobrar;
+
+		DELETE FROM cuentascobrar
+    	WHERE id = idCtaCobrar;
+    
+    	DELETE FROM detallecobro
+    	WHERE idCuentaCobrar = idCtaCobrar;
+    
+    	DELETE FROM cobros
+    	WHERE id = id_cobro;
+    
+    	SELECT totalFactura, idCliente, pagoInicial
+    	INTO total, id_cliente, pagoI
+    	FROM ventas 	
+    	WHERE idVenta = NEW.idVenta;
+    
+    	UPDATE clientes 
+    	SET limiteCredito = limiteCredito + (total - pagoI)
+    	WHERE idCliente = id_cliente;
+	END IF; 
 END
 $$
 DELIMITER ;
@@ -853,7 +1091,7 @@ DELIMITER ;
 CREATE TABLE `formapagos` (
   `idFormaPago` int(11) NOT NULL,
   `formaPago` varchar(75) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `formapagos`
@@ -873,7 +1111,7 @@ CREATE TABLE `localidades` (
   `localidad` varchar(50) NOT NULL,
   `idDepartamento` int(11) NOT NULL,
   `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `localidades`
@@ -951,7 +1189,7 @@ INSERT INTO `localidades` (`idLocalidad`, `localidad`, `idDepartamento`, `activo
 (69, 'Ñumí', 4, 1),
 (70, 'Paso Yobai', 4, 1),
 (71, 'San Salvador', 4, 1),
-(72, 'Tebicuary', 4, 0),
+(72, 'Tebicuary', 4, 1),
 (73, 'Villarrica', 4, 1),
 (74, 'Yataity', 4, 1),
 (75, 'Caaguazú', 5, 1),
@@ -1139,9 +1377,7 @@ INSERT INTO `localidades` (`idLocalidad`, `localidad`, `idDepartamento`, `activo
 (257, 'Bahía Negra', 17, 1),
 (258, 'Capitán Carmelo Peralta', 17, 1),
 (259, 'Fuerte Olimpo', 17, 1),
-(260, 'Puerto Casado', 17, 1),
-(261, 'Rpueba', 4, 0),
-(262, 'eeegdd', 4, 0);
+(260, 'Puerto Casado', 17, 1);
 
 -- --------------------------------------------------------
 
@@ -1153,7 +1389,7 @@ CREATE TABLE `marca` (
   `idMarca` int(11) NOT NULL,
   `marca` varchar(50) NOT NULL,
   `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `marca`
@@ -1169,7 +1405,7 @@ INSERT INTO `marca` (`idMarca`, `marca`, `activo`) VALUES
 (7, 'Ciser', 1),
 (8, 'Profield', 1),
 (9, 'Sin Marca', 1),
-(10, 'prueba', 0);
+(11, 'pruebas', 1);
 
 -- --------------------------------------------------------
 
@@ -1189,7 +1425,7 @@ CREATE TABLE `menus` (
   `guardar` int(11) NOT NULL,
   `eliminar` int(11) NOT NULL,
   `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `menus`
@@ -1204,7 +1440,7 @@ INSERT INTO `menus` (`id`, `nombre`, `menu`, `subMenu`, `item`, `subItem`, `idCa
 (6, 'Primero', 0, 1, 0, 0, 5, 1, 0, 0, 1),
 (7, 'Siguiente', 0, 1, 0, 0, 5, 1, 0, 0, 1),
 (8, 'Anterior', 0, 1, 0, 0, 5, 1, 0, 0, 1),
-(9, 'Ultimo', 0, 1, 0, 0, 5, 1, 0, 0, 1),
+(9, 'Último', 0, 1, 0, 0, 5, 1, 0, 0, 1),
 (10, 'Buscar', 0, 1, 0, 0, 5, 1, 0, 0, 1),
 (11, 'Eliminar', 0, 1, 0, 0, 5, 1, 0, 0, 1),
 (12, 'Nuevo', 0, 1, 0, 0, 5, 1, 0, 0, 1),
@@ -1216,49 +1452,50 @@ INSERT INTO `menus` (`id`, `nombre`, `menu`, `subMenu`, `item`, `subItem`, `idCa
 (18, 'Tamaño', 0, 0, 1, 0, 16, 1, 1, 1, 1),
 (19, 'Diseño', 0, 0, 1, 0, 16, 1, 1, 1, 1),
 (20, 'Marca', 0, 0, 1, 0, 16, 1, 1, 1, 1),
-(21, 'Categoria Producto', 0, 0, 1, 0, 16, 1, 1, 1, 1),
+(21, 'Categoria', 0, 0, 1, 0, 16, 1, 1, 1, 1),
 (22, 'Producto', 0, 0, 1, 0, 16, 1, 1, 1, 1),
-(23, 'Ajuste de Stock', 0, 1, 0, 0, 15, 1, 1, 1, 1),
-(24, 'Informes', 0, 1, 0, 0, 15, 1, 0, 0, 1),
-(25, 'Lista de Productos', 0, 0, 1, 0, 24, 1, 0, 0, 1),
-(26, 'Seguimiento de Productos', 0, 0, 1, 0, 24, 1, 0, 0, 1),
-(27, 'Fichas', 1, 0, 0, 0, 0, 1, 0, 0, 1),
-(28, 'Personas', 0, 1, 0, 0, 27, 1, 1, 1, 1),
-(29, 'Empleado', 0, 1, 0, 0, 27, 1, 1, 1, 1),
-(30, 'Depósitos', 0, 1, 0, 0, 27, 1, 1, 1, 1),
-(31, 'Sucursales', 0, 1, 0, 0, 27, 1, 1, 1, 1),
-(32, 'Empresa', 0, 1, 0, 0, 27, 1, 1, 0, 1),
-(33, 'Departamentos', 0, 1, 0, 0, 27, 1, 1, 1, 1),
-(34, 'Ciudades', 0, 1, 0, 0, 27, 1, 1, 1, 1),
-(35, 'Plazos', 0, 1, 0, 0, 27, 1, 1, 1, 1),
-(36, 'Comprobantes', 0, 1, 0, 0, 27, 1, 0, 0, 1),
-(37, 'Tipo de Comprobantes', 0, 0, 1, 0, 36, 1, 1, 1, 1),
-(38, 'Talonarios', 0, 0, 1, 0, 36, 1, 1, 1, 1),
+(23, 'Precios', 0, 0, 1, 0, 16, 1, 1, 1, 1),
+(24, 'Ajuste de Stock', 0, 1, 0, 0, 15, 1, 1, 1, 1),
+(25, 'Informes', 0, 1, 0, 0, 15, 1, 0, 0, 1),
+(26, 'Lista de Productos', 0, 0, 1, 0, 25, 1, 0, 0, 1),
+(27, 'Seguimiento de Productos', 0, 0, 1, 0, 25, 1, 0, 0, 1),
+(28, 'Fichas', 1, 0, 0, 0, 0, 1, 0, 0, 1),
+(29, 'Personas', 0, 1, 0, 0, 28, 1, 1, 1, 1),
+(30, 'Empleados', 0, 1, 0, 0, 28, 1, 1, 1, 1),
+(31, 'Depósitos', 0, 1, 0, 0, 28, 1, 1, 1, 1),
+(32, 'Sucursales', 0, 1, 0, 0, 28, 1, 1, 1, 1),
+(33, 'Empresa', 0, 1, 0, 0, 28, 1, 1, 0, 1),
+(34, 'Departamentos', 0, 1, 0, 0, 28, 1, 1, 1, 1),
+(35, 'Ciudades', 0, 1, 0, 0, 28, 1, 1, 1, 1),
+(36, 'Plazos', 0, 1, 0, 0, 28, 1, 1, 1, 1),
+(37, 'Comprobantes', 0, 1, 0, 0, 28, 1, 0, 0, 1),
+(38, 'Talonarios', 0, 0, 1, 0, 37, 1, 1, 1, 1),
 (39, 'Seguridad', 1, 0, 0, 0, 0, 1, 0, 0, 1),
 (40, 'Usuarios', 0, 1, 0, 0, 39, 1, 1, 1, 1),
 (41, 'Roles', 0, 1, 0, 0, 39, 1, 1, 1, 1),
 (42, 'Permisos', 0, 1, 0, 0, 39, 1, 1, 1, 1),
-(43, 'Menús', 0, 1, 0, 0, 39, 1, 1, 1, 1),
-(44, 'Tesorería', 1, 0, 0, 0, 0, 1, 0, 0, 1),
-(45, 'Caja', 0, 1, 0, 0, 44, 1, 0, 0, 1),
-(46, 'Arqueos', 0, 0, 1, 0, 45, 1, 1, 1, 1),
-(47, 'Planillas', 0, 0, 1, 0, 45, 1, 1, 1, 1),
-(48, 'Pagos', 0, 1, 0, 0, 44, 1, 1, 1, 1),
-(49, 'Cobros', 0, 1, 0, 0, 44, 1, 0, 0, 1),
-(50, 'Cobro', 0, 0, 1, 0, 49, 1, 1, 1, 1),
-(51, 'Generar recibo', 0, 0, 1, 0, 49, 1, 0, 0, 1),
-(52, 'Ventas', 1, 0, 0, 0, 0, 1, 0, 0, 1),
-(53, 'Clientes', 0, 1, 0, 0, 52, 1, 1, 1, 1),
-(54, 'Facturacion', 0, 1, 0, 0, 52, 1, 0, 0, 1),
-(55, 'Generar Factura', 0, 0, 1, 0, 54, 1, 0, 0, 1),
-(56, 'Anular Factura', 0, 0, 1, 0, 54, 1, 1, 0, 1),
-(57, 'Tipo Cliente', 0, 1, 0, 0, 52, 1, 1, 1, 1),
-(58, 'Venta', 0, 1, 0, 0, 52, 1, 1, 0, 1),
-(59, 'Informes', 0, 1, 0, 0, 52, 1, 0, 0, 1),
-(60, 'Compras', 1, 0, 0, 0, 0, 1, 0, 0, 1),
-(61, 'Proveedores', 0, 1, 0, 0, 60, 1, 1, 1, 1),
-(62, 'Compra', 0, 1, 0, 0, 60, 1, 1, 1, 1),
-(63, 'Informes', 0, 1, 0, 0, 60, 1, 0, 0, 1);
+(43, 'Tesorería', 1, 0, 0, 0, 0, 1, 0, 0, 1),
+(44, 'Cajas', 0, 1, 0, 0, 43, 1, 0, 0, 1),
+(45, 'Gestión Caja', 0, 0, 1, 0, 44, 1, 1, 1, 1),
+(46, 'Apertura Caja', 0, 0, 1, 0, 44, 1, 1, 1, 1),
+(47, 'Cerrar Caja', 0, 0, 1, 0, 44, 1, 1, 1, 1),
+(48, 'Generar Arqueo', 0, 0, 1, 0, 44, 1, 0, 0, 1),
+(49, 'Pagos', 0, 1, 0, 0, 43, 1, 1, 1, 1),
+(50, 'Cobros', 0, 1, 0, 0, 43, 1, 0, 0, 1),
+(51, 'Cobro', 0, 0, 1, 0, 50, 1, 1, 1, 1),
+(52, 'Generar recibo', 0, 0, 1, 0, 50, 1, 0, 0, 1),
+(53, 'Ventas', 1, 0, 0, 0, 0, 1, 0, 0, 1),
+(54, 'Clientes', 0, 1, 0, 0, 53, 1, 1, 1, 1),
+(55, 'Facturacion', 0, 1, 0, 0, 53, 1, 0, 0, 1),
+(56, 'Generar Factura', 0, 0, 1, 0, 55, 1, 0, 0, 1),
+(57, 'Anular Factura', 0, 0, 1, 0, 55, 1, 1, 0, 1),
+(58, 'Tipo Cliente', 0, 1, 0, 0, 53, 1, 1, 1, 1),
+(59, 'Venta', 0, 1, 0, 0, 53, 1, 1, 0, 1),
+(60, 'Informes', 0, 1, 0, 0, 53, 1, 0, 0, 1),
+(61, 'Compras', 1, 0, 0, 0, 0, 1, 0, 0, 1),
+(62, 'Proveedores', 0, 1, 0, 0, 61, 1, 1, 1, 1),
+(63, 'Compra', 0, 1, 0, 0, 61, 1, 1, 1, 1),
+(64, 'Informes', 0, 1, 0, 0, 61, 1, 0, 0, 1);
 
 -- --------------------------------------------------------
 
@@ -1271,7 +1508,7 @@ CREATE TABLE `monedas` (
   `nombre` varchar(45) NOT NULL,
   `simbolo` varchar(5) NOT NULL,
   `decimales` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `monedas`
@@ -1292,8 +1529,28 @@ CREATE TABLE `pagos` (
   `idProveedor` int(11) NOT NULL,
   `fecha` bigint(20) NOT NULL,
   `nroRecibo` int(11) NOT NULL,
-  `totalPago` float(16,2) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `totalPago` float(16,2) NOT NULL,
+  `idCaja` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `pagos`
+--
+
+INSERT INTO `pagos` (`id`, `idProveedor`, `fecha`, `nroRecibo`, `totalPago`, `idCaja`) VALUES
+(1, 1, 1682107500, 1, 40000.00, 1);
+
+--
+-- Disparadores `pagos`
+--
+DELIMITER $$
+CREATE TRIGGER `pagos_delete` BEFORE DELETE ON `pagos` FOR EACH ROW DELETE FROM detallespagos WHERE idPago = OLD.id
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `pagos_update` BEFORE UPDATE ON `pagos` FOR EACH ROW DELETE FROM detallespagos WHERE idPago = NEW.id
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -1308,7 +1565,7 @@ CREATE TABLE `permisos` (
   `ver` int(11) NOT NULL DEFAULT 1,
   `guardar` int(11) NOT NULL DEFAULT 1,
   `eliminar` int(11) NOT NULL DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -1326,7 +1583,7 @@ CREATE TABLE `personas` (
   `direccion` varchar(255) DEFAULT NULL,
   `idLocalidad` int(11) NOT NULL,
   `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `personas`
@@ -1340,19 +1597,6 @@ INSERT INTO `personas` (`idPersona`, `nombre`, `apellido`, `cedula`, `email`, `t
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `planilla`
---
-
-CREATE TABLE `planilla` (
-  `id` int(11) NOT NULL,
-  `idCaja` int(11) NOT NULL,
-  `ingreso` double NOT NULL,
-  `egreso` double NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- Estructura de tabla para la tabla `plazos`
 --
 
@@ -1362,7 +1606,7 @@ CREATE TABLE `plazos` (
   `cuotas` int(11) NOT NULL,
   `irregular` int(11) NOT NULL,
   `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `plazos`
@@ -1370,8 +1614,21 @@ CREATE TABLE `plazos` (
 
 INSERT INTO `plazos` (`idPlazo`, `plazo`, `cuotas`, `irregular`, `activo`) VALUES
 (1, '1 Dia', 0, 0, 1),
-(2, '2 Meses', 2, 1, 1),
-(3, '0 Dia', 0, 1, 1);
+(2, '2 Meses', 2, 1, 1);
+
+--
+-- Disparadores `plazos`
+--
+DELIMITER $$
+CREATE TRIGGER `plazos_delete` BEFORE DELETE ON `plazos` FOR EACH ROW DELETE FROM plazosdetalle WHERE idPlazo = OLD.idPlazo
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `plazos_update` BEFORE UPDATE ON `plazos` FOR EACH ROW IF NEW.activo = 1 THEN
+DELETE FROM plazosdetalle WHERE idPlazo = NEW.idPlazo;
+END IF
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -1385,7 +1642,7 @@ CREATE TABLE `plazosdetalle` (
   `cuota` int(11) NOT NULL,
   `dias` int(11) NOT NULL,
   `porcentaje` decimal(6,2) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `plazosdetalle`
@@ -1393,11 +1650,7 @@ CREATE TABLE `plazosdetalle` (
 
 INSERT INTO `plazosdetalle` (`idDetallePlazo`, `idPlazo`, `cuota`, `dias`, `porcentaje`) VALUES
 (1, 1, 0, 0, '0.00'),
-(1, 2, 1, 2, '2.00'),
-(1, 3, 0, 0, '0.00'),
-(2, 1, 1, 2, '2.00'),
-(2, 2, 2, 3, '3.00'),
-(3, 1, 0, 0, '0.00');
+(1, 2, 2, 3, '3.00');
 
 -- --------------------------------------------------------
 
@@ -1412,14 +1665,28 @@ CREATE TABLE `precios` (
   `idMoneda` int(11) NOT NULL,
   `aprobado` int(11) NOT NULL,
   `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `precios`
 --
 
 INSERT INTO `precios` (`idPrecio`, `fecha`, `nombre`, `idMoneda`, `aprobado`, `activo`) VALUES
-(1, 1679454000, 'Precio 1', 1, 1, 0);
+(1, 1682277420, 'Precio 1', 1, 1, 1);
+
+--
+-- Disparadores `precios`
+--
+DELIMITER $$
+CREATE TRIGGER `precios_delete` BEFORE DELETE ON `precios` FOR EACH ROW DELETE FROM detalleprecio WHERE idPrecio = OlD.idPrecio
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `precios_update` BEFORE UPDATE ON `precios` FOR EACH ROW IF NEW.activo = 1 THEN
+DELETE FROM detalleprecio WHERE idPrecio = NEW.idPrecio;
+END IF
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -1434,7 +1701,7 @@ CREATE TABLE `producto` (
   `IdMarca` int(11) NOT NULL,
   `Impuesto` int(11) NOT NULL,
   `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `producto`
@@ -1444,6 +1711,14 @@ INSERT INTO `producto` (`idProducto`, `nombre`, `idCategoria`, `IdMarca`, `Impue
 (1, 'Caño', 1, 2, 10, 1),
 (2, 'afs', 1, 1, 5, 1),
 (3, 'prueba', 2, 9, 10, 1);
+
+--
+-- Disparadores `producto`
+--
+DELIMITER $$
+CREATE TRIGGER `producto_delete` BEFORE DELETE ON `producto` FOR EACH ROW DELETE FROM productodetalle WHERE idProducto = OLD.idProducto
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -1459,7 +1734,7 @@ CREATE TABLE `productodetalle` (
   `idColor` int(11) DEFAULT NULL,
   `idDiseño` int(11) DEFAULT NULL,
   `stockMinimo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `productodetalle`
@@ -1467,8 +1742,7 @@ CREATE TABLE `productodetalle` (
 
 INSERT INTO `productodetalle` (`idProductoDetalle`, `codBarra`, `idProducto`, `idTamaño`, `idColor`, `idDiseño`, `stockMinimo`) VALUES
 (1, '0¿4532453', 2, 1, 1, 1, 0),
-(1, '123456', 1, 1, 1, 1, 10),
-(2, '61561561', 2, 3, 4, 2, 10),
+(1, '123456', 1, 1, 1, 1, 5),
 (1, '956327', 3, 1, 1, 1, 0);
 
 -- --------------------------------------------------------
@@ -1483,7 +1757,7 @@ CREATE TABLE `proveedores` (
   `idPersona` int(11) NOT NULL,
   `idMoneda` int(11) NOT NULL,
   `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `proveedores`
@@ -1495,24 +1769,88 @@ INSERT INTO `proveedores` (`idProveedor`, `ruc`, `idPersona`, `idMoneda`, `activ
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `recibosanulados`
+--
+
+CREATE TABLE `recibosanulados` (
+  `id` int(11) NOT NULL,
+  `idCliente` int(11) NOT NULL,
+  `idCobro` int(11) NOT NULL,
+  `nroRecibo` int(11) NOT NULL,
+  `motivo` varchar(255) NOT NULL,
+  `fechaOperacion` bigint(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `recibosanulados`
+--
+
+INSERT INTO `recibosanulados` (`id`, `idCliente`, `idCobro`, `nroRecibo`, `motivo`, `fechaOperacion`) VALUES
+(1, 1, 2, 2, 'Prueba', 1682782740),
+(2, 1, 1, 1, 'Prueba', 1682782800);
+
+--
+-- Disparadores `recibosanulados`
+--
+DELIMITER $$
+CREATE TRIGGER `recibosanulados_insert` AFTER INSERT ON `recibosanulados` FOR EACH ROW BEGIN 
+	DECLARE total DOUBLE;
+    DECLARE idCtaCobrar INTEGER;
+    DECLARE cuotaCobrar INTEGER;
+    DECLARE var_final INTEGER DEFAULT 0;
+  	DECLARE cursor1 CURSOR FOR SELECT idCuentaCobrar, cuota FROM detallecobro WHERE idCobro = NEW.idCobro;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET var_final = 1;
+    
+	UPDATE cobros SET anulado = 1 
+	WHERE id = NEW.idCobro;
+    
+    SELECT totalCobro
+    INTO total
+    FROM cobros
+    WHERE id = NEW.idCobro;
+    
+    UPDATE clientes 
+    SET limiteCredito = limiteCredito - total
+    WHERE idCliente = NEW.idCliente;
+    
+    OPEN cursor1;
+	bucle: LOOP
+
+    FETCH cursor1 INTO idCtaCobrar, cuotaCobrar;
+
+    IF var_final = 1 THEN
+      LEAVE bucle;
+    END IF;
+
+    UPDATE cuentascobrar SET pagado = 0 WHERE id = idCtaCobrar AND cuota = cuotaCobrar;
+
+  END LOOP bucle;
+  CLOSE cursor1;
+END
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `roles`
 --
 
 CREATE TABLE `roles` (
   `idRol` int(11) NOT NULL,
   `rol` varchar(50) NOT NULL,
-  `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `activo` int(11) NOT NULL,
+  `administrador` int(11) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `roles`
 --
 
-INSERT INTO `roles` (`idRol`, `rol`, `activo`) VALUES
-(1, 'Administrador', 1),
-(2, 'Encargado de Deposito', 1),
-(3, 'Cajero', 1),
-(4, 'Gestor de pedidos', 1);
+INSERT INTO `roles` (`idRol`, `rol`, `activo`, `administrador`) VALUES
+(1, 'Administrador', 1, 1),
+(2, 'Encargado de Deposito', 1, 0),
+(3, 'Cajero', 1, 0);
 
 -- --------------------------------------------------------
 
@@ -1525,14 +1863,15 @@ CREATE TABLE `stock` (
   `idDeposito` int(11) NOT NULL,
   `stockActual` int(11) NOT NULL,
   `ultimaCompra` bigint(20) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `stock`
 --
 
 INSERT INTO `stock` (`codBarra`, `idDeposito`, `stockActual`, `ultimaCompra`) VALUES
-('123456', 1, 19, 1681444800);
+('123456', 1, 26, 1682851620),
+('956327', 1, 0, 1682173920);
 
 -- --------------------------------------------------------
 
@@ -1545,7 +1884,7 @@ CREATE TABLE `sucursales` (
   `nombre` varchar(50) NOT NULL,
   `idLocalidad` int(11) NOT NULL,
   `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `sucursales`
@@ -1554,8 +1893,7 @@ CREATE TABLE `sucursales` (
 INSERT INTO `sucursales` (`idSucursal`, `nombre`, `idLocalidad`, `activo`) VALUES
 (1, 'Sucursal Central', 64, 1),
 (2, 'Sucursal 1', 59, 1),
-(3, 'Sucursal 3', 99, 1),
-(4, 'asvcasca', 68, 1);
+(3, 'Sucursal 3', 99, 1);
 
 -- --------------------------------------------------------
 
@@ -1566,25 +1904,26 @@ INSERT INTO `sucursales` (`idSucursal`, `nombre`, `idLocalidad`, `activo`) VALUE
 CREATE TABLE `talonarios` (
   `idTalonario` int(11) NOT NULL,
   `idTipoComprobante` int(11) NOT NULL,
-  `timbrado` varchar(50) DEFAULT NULL,
-  `inicioVigencia` date DEFAULT NULL,
-  `finVigencia` date DEFAULT NULL,
-  `serie` varchar(50) DEFAULT NULL,
+  `timbrado` varchar(50) NOT NULL,
+  `inicioVigencia` bigint(20) NOT NULL,
+  `finVigencia` bigint(20) NOT NULL,
+  `serie` varchar(50) NOT NULL,
   `nroInicio` int(11) NOT NULL,
   `nroFin` int(11) NOT NULL,
   `activo` int(11) NOT NULL,
   `idUsuario` int(11) NOT NULL,
   `disponible` int(11) NOT NULL DEFAULT 0,
-  `utilizado` int(11) NOT NULL DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `utilizado` int(11) NOT NULL DEFAULT 0,
+  `fechaCreacion` bigint(20) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `talonarios`
 --
 
-INSERT INTO `talonarios` (`idTalonario`, `idTipoComprobante`, `timbrado`, `inicioVigencia`, `finVigencia`, `serie`, `nroInicio`, `nroFin`, `activo`, `idUsuario`, `disponible`, `utilizado`) VALUES
-(1, 1, '123456-7', '2022-11-01', '2022-11-30', '001-001-', 1, 100, 1, 1, 97, 3),
-(2, 2, NULL, NULL, NULL, NULL, 1, 100, 1, 1, 98, 2);
+INSERT INTO `talonarios` (`idTalonario`, `idTipoComprobante`, `timbrado`, `inicioVigencia`, `finVigencia`, `serie`, `nroInicio`, `nroFin`, `activo`, `idUsuario`, `disponible`, `utilizado`, `fechaCreacion`) VALUES
+(1, 1, '123456-7', 1680321600, 1682827200, '001-001-', 1, 100, 1, 1, 100, 4, 1682726589),
+(2, 2, '', 0, 0, '', 1, 100, 1, 1, 97, 3, 1682629136);
 
 -- --------------------------------------------------------
 
@@ -1596,7 +1935,7 @@ CREATE TABLE `tamaño` (
   `idTamaño` int(11) NOT NULL,
   `tamaño` varchar(50) NOT NULL,
   `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `tamaño`
@@ -1605,8 +1944,7 @@ CREATE TABLE `tamaño` (
 INSERT INTO `tamaño` (`idTamaño`, `tamaño`, `activo`) VALUES
 (1, 'grande', 1),
 (2, 'CHICO', 1),
-(3, 'Standard', 1),
-(4, 'Grande', 0);
+(3, 'Standard', 1);
 
 -- --------------------------------------------------------
 
@@ -1617,16 +1955,17 @@ INSERT INTO `tamaño` (`idTamaño`, `tamaño`, `activo`) VALUES
 CREATE TABLE `tipocliente` (
   `idTipoCliente` int(11) NOT NULL,
   `tipo` varchar(75) NOT NULL,
-  `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `activo` int(11) NOT NULL,
+  `idPrecio` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `tipocliente`
 --
 
-INSERT INTO `tipocliente` (`idTipoCliente`, `tipo`, `activo`) VALUES
-(1, 'Tipo 1', 1),
-(2, 'Tipo 2', 1);
+INSERT INTO `tipocliente` (`idTipoCliente`, `tipo`, `activo`, `idPrecio`) VALUES
+(1, 'Tipo 1', 1, 1),
+(2, 'Tipo 2', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -1638,7 +1977,7 @@ CREATE TABLE `tipocomprobante` (
   `idTipoComprobante` int(11) NOT NULL,
   `comprobante` varchar(50) NOT NULL,
   `activo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `tipocomprobante`
@@ -1661,7 +2000,7 @@ CREATE TABLE `usuarios` (
   `activo` int(11) NOT NULL,
   `idRol` int(11) NOT NULL,
   `idEmpleado` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `usuarios`
@@ -1700,39 +2039,38 @@ CREATE TABLE `ventas` (
   `totalImpuesto` double NOT NULL,
   `totalBruto` double NOT NULL,
   `totalFactura` double NOT NULL,
-  `vencimientoFactura` bigint(20) NOT NULL,
   `impreso` int(11) NOT NULL DEFAULT 0,
-  `anulado` int(11) NOT NULL DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `anulado` int(11) NOT NULL DEFAULT 0,
+  `idCaja` int(11) NOT NULL,
+  `idTalonario` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `ventas`
 --
 
-INSERT INTO `ventas` (`idVenta`, `fechaProceso`, `fechaFactura`, `serie`, `timbrado`, `vencimiento`, `nroDocumento`, `idCliente`, `idCondicion`, `idFormaPago`, `idDeposito`, `idTipoComprobante`, `idPlazo`, `idMoneda`, `idUsuario`, `idPrecio`, `pagoInicial`, `totalExento`, `totalNeto`, `totalImpuesto`, `totalBruto`, `totalFactura`, `vencimientoFactura`, `impreso`, `anulado`) VALUES
-(1, 1681358400, 1681358400, '001-001-', '123456-7', '2022-11-30', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 681818.2, 68181.8, 681818.2, 750000, 0, 1, 0),
-(2, 1681358400, 1681358400, '001-001-', '123456-7', '2022-11-30', 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 272727.28, 27272.72, 272727.28, 300000, 0, 0, 0),
-(3, 1681444800, 1681444800, '001-001-', '123456-7', '2022-11-30', 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 272727.28, 27272.72, 272727.28, 300000, 0, 1, 0);
+INSERT INTO `ventas` (`idVenta`, `fechaProceso`, `fechaFactura`, `serie`, `timbrado`, `vencimiento`, `nroDocumento`, `idCliente`, `idCondicion`, `idFormaPago`, `idDeposito`, `idTipoComprobante`, `idPlazo`, `idMoneda`, `idUsuario`, `idPrecio`, `pagoInicial`, `totalExento`, `totalNeto`, `totalImpuesto`, `totalBruto`, `totalFactura`, `impreso`, `anulado`, `idCaja`, `idTalonario`) VALUES
+(1, 1682115000, 1682115000, '001-001-', '123456-7', '2022-11-30', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 13636.36, 1363.64, 13636.36, 15000, 1, 1, 1, 1),
+(2, 1682121480, 1682121480, '001-001-', '123456-7', '2022-11-30', 2, 1, 2, 1, 1, 1, 2, 1, 1, 1, 10000, 0, 54545.44, 5454.56, 54545.44, 60000, 1, 0, 1, 1),
+(3, 1682121900, 1682121900, '001-001-', '123456-7', '2022-11-30', 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 27272.72, 2727.28, 27272.72, 30000, 1, 0, 1, 1),
+(4, 1682178000, 1682178000, '001-001-', '123456-7', '2022-11-30', 4, 1, 2, 1, 1, 1, 2, 1, 1, 1, 0, 0, 22727.27, 2272.73, 22727.27, 25000, 0, 1, 1, 1),
+(5, 1682184240, 1682184240, '001-001-', '123456-7', '2022-11-30', 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 22727.27, 2272.73, 22727.27, 25000, 0, 1, 1, 1),
+(6, 1682184240, 1682184240, '001-001-', '123456-7', '2022-11-30', 6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 54545.45, 5454.55, 54545.45, 60000, 0, 1, 1, 1),
+(7, 1682200020, 1682200020, '001-001-', '123456-7', '2022-11-30', 7, 1, 2, 1, 1, 1, 2, 1, 1, 1, 0, 0, 63636.35, 6363.65, 63636.35, 70000, 0, 1, 1, 1),
+(8, 1682812560, 1682812560, '001-001-', '123456-7', '2023-04-30', 8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 22727.27, 2272.73, 22727.27, 25000, 1, 0, 1, 1);
 
 --
 -- Disparadores `ventas`
 --
 DELIMITER $$
-CREATE TRIGGER `credito_cliente_update_venta_insert` AFTER INSERT ON `ventas` FOR EACH ROW BEGIN
-	IF(NEW.idCondicion = 2) THEN 
-    	UPDATE clientes SET limiteCredito = limiteCredito - NEW.totalFactura - NEW.pagoInicial WHERE idCliente = NEW.idCliente; 
-    END IF;
-END
-$$
-DELIMITER ;
-DELIMITER $$
-CREATE TRIGGER `cuentas_cobrar` AFTER INSERT ON `ventas` FOR EACH ROW BEGIN
+CREATE TRIGGER `ventas_insert` AFTER INSERT ON `ventas` FOR EACH ROW BEGIN
 	DECLARE cuotas INT;
     DECLARE irregular INT;
     DECLARE decimales INT;
     DECLARE cuotaactual INT;
 	DECLARE dias INT;     
-    DECLARE id INT;
+    DECLARE idCtaCobrar INT;
+    DECLARE limite INT;
     DECLARE importecuota FLOAT(18,2); 
     DECLARE ultimacuota FLOAT(18,2);
     DECLARE vence BIGINT; 
@@ -1744,14 +2082,43 @@ IF(NEW.idCondicion = 2) THEN
 		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = msg; 
 	END IF;
     
-    SELECT IFNULL(p.cuotas, 1), IFNULL(p.irregular, 0)
-	INTO cuotas, irregular
-    FROM plazos p
-    WHERE p.idPlazo = NEW.idPlazo;
+SELECT 
+    limiteCredito
+INTO limite FROM
+    clientes
+WHERE
+    idCliente = NEW.idCliente;
     
-    SELECT IFNULL(m.decimales, 0) INTO decimales
-    FROM monedas m 
-    WHERE m.idMoneda = NEW.idMoneda;
+    IF limite > (NEW.totalFactura - NEW.pagoInicial) THEN
+		UPDATE clientes 
+		SET limiteCredito = limiteCredito - NEW.totalFactura - NEW.pagoInicial
+		WHERE idCliente = NEW.idCliente;
+    ELSE
+        UPDATE clientes 
+		SET limiteCredito = NEW.totalFactura - NEW.pagoInicial - limiteCredito
+		WHERE idCliente = NEW.idCliente;
+    END IF;
+    
+
+    
+UPDATE talonarios 
+SET 
+    disponible = disponible - 1,
+    utilizado = nroFin - disponible;
+    
+SELECT 
+    IFNULL(p.cuotas, 1), IFNULL(p.irregular, 0)
+INTO cuotas , irregular FROM
+    plazos p
+WHERE
+    p.idPlazo = NEW.idPlazo;
+    
+SELECT 
+    IFNULL(m.decimales, 0)
+INTO decimales FROM
+    monedas m
+WHERE
+    m.idMoneda = NEW.idMoneda;
     
     IF NEW.pagoInicial > 0 THEN
 		SET importecuota = ROUND(((NEW.totalFactura - NEW.pagoInicial) / cuotas), decimales);
@@ -1763,7 +2130,10 @@ IF(NEW.idCondicion = 2) THEN
     
 	SET vence = 0;
  
-	SELECT IFNULL(MAX(id), 0) INTO id FROM cuentascobrar;
+	SELECT 
+    IFNULL(MAX(id), 0)
+INTO idCtaCobrar FROM
+    cuentascobrar;
 
 	SET cuotaactual = 1;
 
@@ -1774,7 +2144,10 @@ IF(NEW.idCondicion = 2) THEN
             WHERE pd.idPlazo = NEW.idPlazo
             AND pd.cuota = cuotaactual;
 
-			SELECT UNIX_TIMESTAMP(DATE_ADD(FROM_UNIXTIME(NEW.fechaFactura), INTERVAL dias DAY)) INTO vence;
+			SELECT 
+    UNIX_TIMESTAMP(DATE_ADD(FROM_UNIXTIME(NEW.fechaFactura),
+                INTERVAL dias DAY))
+INTO vence;
 		ELSE 
 			SELECT UNIX_TIMESTAMP(DATE_ADD(FROM_UNIXTIME(NEW.fechaFactura), INTERVAL cuotaactual MONTH)) INTO vence;
 		END IF;
@@ -1784,29 +2157,17 @@ IF(NEW.idCondicion = 2) THEN
 		END IF;
         
 		BEGIN
-        	INSERT INTO cuentascobrar VALUES((id + 1), cuotaactual, importecuota, 0.0, vence, NEW.idVenta, 'ventas');
+        	INSERT INTO cuentascobrar VALUES((idCtaCobrar + 1), cuotaactual, importecuota, 0.0, vence, NEW.idVenta, 'ventas');
 		END;
         
 		SET cuotaactual = (cuotaactual + 1) ;
 	END WHILE;
 	
     IF NEW.pagoInicial > 0 THEN
-		INSERT INTO cuentascobrar VALUES((id + 1), 0, 0.0, NEW.pagoInicial, vence, NEW.idVenta, 'ventas');
+		INSERT INTO cuentascobrar VALUES((idCtaCobrar + 1), 0, 0.0, NEW.pagoInicial, vence, NEW.idVenta, 'ventas');
 	END IF;
     END IF;
 END
-$$
-DELIMITER ;
-DELIMITER $$
-CREATE TRIGGER `talonario_update_ventas_delete` AFTER DELETE ON `ventas` FOR EACH ROW UPDATE talonarios
-SET disponible = disponible + 1,
-utilizado = nroFin - disponible
-$$
-DELIMITER ;
-DELIMITER $$
-CREATE TRIGGER `talonario_update_ventas_insert` AFTER INSERT ON `ventas` FOR EACH ROW UPDATE talonarios
-SET disponible = disponible - 1,
-utilizado = nroFin - disponible
 $$
 DELIMITER ;
 
@@ -1827,11 +2188,18 @@ ALTER TABLE `ajustestock`
   ADD PRIMARY KEY (`idajustes`);
 
 --
+-- Indices de la tabla `aperturacajas`
+--
+ALTER TABLE `aperturacajas`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idUsuario` (`idUsuario`);
+
+--
 -- Indices de la tabla `arqueocajas`
 --
 ALTER TABLE `arqueocajas`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idCaja` (`idCaja`);
+  ADD PRIMARY KEY (`idArqueo`),
+  ADD KEY `idCaja` (`idApertura`);
 
 --
 -- Indices de la tabla `auditoria`
@@ -1844,8 +2212,7 @@ ALTER TABLE `auditoria`
 -- Indices de la tabla `cajas`
 --
 ALTER TABLE `cajas`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idUsuario` (`idUsuario`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indices de la tabla `categoria`
@@ -1936,7 +2303,7 @@ ALTER TABLE `deposito`
 -- Indices de la tabla `detallecobro`
 --
 ALTER TABLE `detallecobro`
-  ADD PRIMARY KEY (`idDetalleCobro`),
+  ADD PRIMARY KEY (`idDetalleCobro`,`idCobro`) USING BTREE,
   ADD KEY `idCobro` (`idCobro`),
   ADD KEY `idCuentaCobrar` (`idCuentaCobrar`);
 
@@ -1952,7 +2319,7 @@ ALTER TABLE `detallecompra`
 -- Indices de la tabla `detalleprecio`
 --
 ALTER TABLE `detalleprecio`
-  ADD PRIMARY KEY (`idPrecioDetalle`),
+  ADD PRIMARY KEY (`idPrecioDetalle`,`idPrecio`) USING BTREE,
   ADD KEY `idPrecio` (`idPrecio`),
   ADD KEY `codBarra` (`codBarra`);
 
@@ -1960,7 +2327,7 @@ ALTER TABLE `detalleprecio`
 -- Indices de la tabla `detallespagos`
 --
 ALTER TABLE `detallespagos`
-  ADD PRIMARY KEY (`idDetallePago`),
+  ADD PRIMARY KEY (`idDetallePago`,`idPago`) USING BTREE,
   ADD KEY `idPago` (`idPago`),
   ADD KEY `idCuentaPagar` (`idCuentaPagar`);
 
@@ -2053,13 +2420,6 @@ ALTER TABLE `personas`
   ADD KEY `idLocalidad` (`idLocalidad`);
 
 --
--- Indices de la tabla `planilla`
---
-ALTER TABLE `planilla`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idCaja` (`idCaja`);
-
---
 -- Indices de la tabla `plazos`
 --
 ALTER TABLE `plazos`
@@ -2104,6 +2464,14 @@ ALTER TABLE `proveedores`
   ADD PRIMARY KEY (`idProveedor`),
   ADD KEY `idPersona` (`idPersona`),
   ADD KEY `idMoneda` (`idMoneda`);
+
+--
+-- Indices de la tabla `recibosanulados`
+--
+ALTER TABLE `recibosanulados`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idCliente` (`idCliente`),
+  ADD KEY `idCobro` (`idCobro`);
 
 --
 -- Indices de la tabla `roles`
@@ -2181,22 +2549,22 @@ ALTER TABLE `ventas`
 --
 
 --
+-- Filtros para la tabla `aperturacajas`
+--
+ALTER TABLE `aperturacajas`
+  ADD CONSTRAINT `aperturacajas_ibfk_1` FOREIGN KEY (`idUsuario`) REFERENCES `usuarios` (`id_usuario`);
+
+--
 -- Filtros para la tabla `arqueocajas`
 --
 ALTER TABLE `arqueocajas`
-  ADD CONSTRAINT `arqueocajas_ibfk_1` FOREIGN KEY (`idCaja`) REFERENCES `cajas` (`id`);
+  ADD CONSTRAINT `arqueocajas_ibfk_1` FOREIGN KEY (`idApertura`) REFERENCES `aperturacajas` (`id`);
 
 --
 -- Filtros para la tabla `auditoria`
 --
 ALTER TABLE `auditoria`
   ADD CONSTRAINT `auditoria_ibfk_1` FOREIGN KEY (`idUsuario`) REFERENCES `usuarios` (`id_usuario`);
-
---
--- Filtros para la tabla `cajas`
---
-ALTER TABLE `cajas`
-  ADD CONSTRAINT `cajas_ibfk_1` FOREIGN KEY (`idUsuario`) REFERENCES `usuarios` (`id_usuario`);
 
 --
 -- Filtros para la tabla `clientes`
@@ -2312,12 +2680,6 @@ ALTER TABLE `permisos`
 --
 ALTER TABLE `personas`
   ADD CONSTRAINT `personas_ibfk_1` FOREIGN KEY (`idLocalidad`) REFERENCES `localidades` (`idLocalidad`);
-
---
--- Filtros para la tabla `planilla`
---
-ALTER TABLE `planilla`
-  ADD CONSTRAINT `planilla_ibfk_1` FOREIGN KEY (`idCaja`) REFERENCES `cajas` (`id`);
 
 --
 -- Filtros para la tabla `plazosdetalle`
